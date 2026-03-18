@@ -1,0 +1,6 @@
+google-adk
+python-dotenv
+requests
+google-genai
+mcp
+beautifulsoup4
