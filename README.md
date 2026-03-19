@@ -8,6 +8,8 @@ This project is a demonstration of a multi-agent system built with the **Google 
 
 The architecture illustrates a powerful synergy between the Google ADK and LSEG's specialized financial APIs bridged via standard MCP:
 
+![Agent Architecture Diagram](agent_diagram.png)
+
 1. **Multi-Agent Orchestration (Google ADK)**: The system is structured using a multi-agent framework:
    - **Root Orchestrator (`lseg_market_agent`)**: Acts as the cognitive orchestration engine. It autonomously queries the LSEG tools, tracks context, and delegates tasks to sub-agents.
    - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots, candlestick charts, and visualizations from the data retrieved by the orchestrator.

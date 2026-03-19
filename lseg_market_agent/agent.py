@@ -5,6 +5,8 @@ from .config import config
 from .helpercode import get_project_id
 from google import genai
 from google.adk.models import google_llm
+from google.adk.tools import google_search
+from google.adk.tools import AgentTool
 
 api_client = genai.Client(
     vertexai=True,
@@ -13,6 +15,23 @@ api_client = genai.Client(
 )
 model = google_llm.Gemini(model=config.gemini_model)
 model.api_client= api_client 
+
+
+RIC_RESOLVER_INSTRUCTION = (
+    "You are a stock RIC Code or Symbol resolver. "
+    "When given a company name, use google_search to find its official stock RIC Code and Symbol "
+    "Search for '<company name> stock RIC Code and Symbol site:finance.yahoo.com OR site:google.com/finance'. "
+    "Return only the RIC Code and Symbol as plain text so that it can be used in other tools."
+    "Do not include any explanation"
+)
+
+ric_resolver_agent = LlmAgent(
+    model=model,
+    name="ric_resolver",
+    description="Resolves a company name to its stock RIC Code and Symbol using Google Search.",
+    instruction=RIC_RESOLVER_INSTRUCTION,
+    tools=[google_search],
+)
 
 AGENT_INSTRUCTIONS = """You are a highly capable Cross-Asset Market Intelligence & Valuation Agent for LSEG.
 Your objective is to provide a comprehensive, multi-modal analysis of companies and macroeconomic conditions by synthesizing data from the LSEG MCP server.
@@ -84,6 +103,6 @@ root_agent = LlmAgent(
     name="lseg_market_agent",
     model=model,
     instruction=AGENT_INSTRUCTIONS,
-    tools=[mcp_client_bridge.create_lseg_mcp_toolset()],
+    tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
     sub_agents=[graphing_agent, report_agent]
 )
