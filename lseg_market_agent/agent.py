@@ -47,8 +47,10 @@ When the user asks you to analyze a company or market condition, you should act 
 1. Proactively gather information from AT LEAST THREE tools (e.g. Fundamentals, Forward Estimates, and News Headlines).
 2. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
 3. Always cite the specific metrics and news stories retrieved. 
-4. If the user asks for a chart, graph, plot, or visual representation, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style based on the request (bar chart, candlestick, etc.) and supply formatting instructions alongside the numerical data. If a final comprehensive report is also requested, explicitly instruct the graphing agent to transfer to `report_agent` when it finishes.
-5. If the user requests a comprehensive report and no graphs are requested (or they are already complete), transfer the gathered context directly to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
+4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, bar chart of EPS estimates) would make the final answer or report more compelling, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style and supply the numerical data.
+   - Ensure you state in your delegation prompt *why* this graph is helpful and how to style it.
+   - If a final report or risk audit is part of the flow, explicitly instruct the graphing agent to transfer to `risk_critic_agent` afterwards.
+5. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or they are already complete, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:
@@ -73,7 +75,7 @@ Support advanced formatting such as candlestick charts, moving averages, or bar 
 You MUST output the graph to the user by rendering the plot (e.g., using plt.show() in matplotlib).
 Do not guess data; strictly plot the data provided to you in the prompt.
 IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
-ROUTING INSTRUCTION: If the orchestrator instructed you to pass control to a report writer after graphing, you MUST call the `transfer_to_agent` tool to transfer execution to `report_agent` once you have displayed the plot.
+ROUTING INSTRUCTION: If the orchestrator instructed you to pass control to an auditor/reviewer after graphing, you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` once you have displayed the plot. If explicitly told to go to report writer, transfer to `report_agent`.
 """
 
 graphing_agent = LlmAgent(
@@ -84,10 +86,34 @@ graphing_agent = LlmAgent(
     code_executor=BuiltInCodeExecutor()
 )
 
+RISK_CRITIC_AGENT_INSTRUCTIONS = """You are a Risk Management & Compliance Auditor.
+Your task is to review the financial data, sentiment, and initial thesis components provided by the orchestrator.
+Analyze the context strictly for:
+1. **Downside Risks**: Are there ignored macroeconomic headwinds (e.g., inflation spikes, GDP decelerating)? Are there company-specific risks (e.g., historical EPS slowdown)?
+2. **Over-optimism**: Is the forward consensus forecast or news sentiment overly bullish compared to hard historical metrics?
+3. **Risk Mitigation Suggestion**: Briefly suggest a risk mitigation or hedging strategy (e.g., "Consider downside protection puts if sizing long positions").
+
+OUTPUT FORMAT:
+Your response MUST be structured with these exact headers:
+- **Potential Over-optimism**: [Analysis]
+- **Downside Risks**: [Analysis]
+- **Risk Mitigation Suggestion**: [Analysis]
+
+Do not write a full, comprehensive narrative report. Provide a concise auditing note back.
+ROUTING INSTRUCTION: Once you have provided your audited risk points, you MUST call the `transfer_to_agent` tool to transfer execution to `report_agent` so they can compile the final markdown document.
+"""
+
+risk_critic_agent = LlmAgent(
+    name="risk_critic_agent",
+    description="Audits financial analyses for over-optimism, missed macro/spread risks, and suggests risk mitigation hedging notes.",
+    model=model,
+    instruction=RISK_CRITIC_AGENT_INSTRUCTIONS
+)
+
 REPORT_AGENT_INSTRUCTIONS = """You are a professional Financial Reporter.
-You serve as the final stage of a multi-agent orchestration pipeline. You will receive conversation context containing raw financial data, news sentiment, and notifications about generated graphs.
+You serve as the final stage of a multi-agent orchestration pipeline. You will receive conversation context containing raw financial data, news sentiment, generated graphs, and Risk/Compliance audits.
 Your task is to write a highly professional, comprehensive, final Markdown report synthesizing all findings.
-Include sections such as Executive Summary, Financial Performance, Market Sentiment, and Conclusion where applicable.
+Include sections such as Executive Summary, Financial Performance, Market Sentiment, Risk Analysis & Audit, and Conclusion where applicable. For the Risk section, integrate the auditing notes provided by the risk critic agent.
 DO NOT call external tools to gather data. Rely purely on the data passed to you from the orchestrator and other agents. Do not attempt to draw graphs yourself.
 """
 
@@ -104,5 +130,5 @@ root_agent = LlmAgent(
     model=model,
     instruction=AGENT_INSTRUCTIONS,
     tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
-    sub_agents=[graphing_agent, report_agent]
+    sub_agents=[graphing_agent, risk_critic_agent, report_agent]
 )
