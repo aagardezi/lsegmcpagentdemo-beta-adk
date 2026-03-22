@@ -4,3 +4,5 @@ requests
 google-genai
 mcp
 beautifulsoup4
+fpdf2
+markdown2

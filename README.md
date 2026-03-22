@@ -15,6 +15,8 @@ The architecture illustrates a powerful synergy between the Google ADK and LSEG'
    - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots, candlestick charts, and visualizations. Its visual choice operates proactively based on retrieved dataset dimensions.
    - **Risk Auditor Sub-Agent (`risk_critic_agent`)**: Critiques the gathered financial analysis for over-optimism, evaluates downside risks, and suggests hedging notes alongside synthesis.
    - **Report Writer Sub-Agent (`report_agent`)**: Synthesizes all gathered data, risk audits, and visual inferences into a final, comprehensive, and professional Markdown report.
+   - **PDF Generator Sub-Agent (`pdf_generator_agent`)**: Compiles the final Markdown report and any visual plots into a professional, downloadable PDF artifact.
+
 2. **MCP HTTP Client Bridge**: Rather than using standard I/O (stdio) proxy executables, this application natively binds to the LSEG HTTP MCP endpoint `https://api.analytics.lseg.com/lfa/mcp` using ADK's `StreamableHTTPConnectionParams`.
 3. **LSEG Authentication**: Handled automatically in Python by `mcp_client_bridge.py`, fetching an ephemeral JWT token via OAuth2 client-credentials logic to secure the MCP communication seamlessly.
 4. **Tool Discovery & Routing**: ADK maps the structured JSON-schemas from the LSEG MCP discovery phase into the LLM's function-calling toolset allowing the LLM to autonomously retrieve required market data to answer ambiguous questions.
@@ -32,11 +34,12 @@ graph TD
     Orchestrator -->|3. Or Bypass if no data fit| RiskCritique[Risk Auditor Sub-Agent]
     Graphing -->|4. Plot Data & Transfer| RiskCritique
     RiskCritique -->|5. Audit & Transfer| Report[Report Writer Sub-Agent]
-    Report -->|6. Compile Report| UserResponse([Final Response])
+    Report -->|6. Compile Report & Transfer| PDFGen[PDF Generator Sub-Agent]
+    PDFGen -->|7. Generate PDF| UserResponse([Final Response])
 ```
 
 ### Key Interaction Mechanisms:
-1. **Automated Chain of Custody**: Agents automatically use explicit routing instructions specified in their system prompt to advance the workflow state (e.g. Orchestrator -> Graphing -> Risk Critic -> Report). Or directly Orchestrator -> Risk Critic if no visualization is appropriate.
+1. **Automated Chain of Custody**: Agents automatically use explicit routing instructions specified in their system prompt to advance the workflow state (e.g., Orchestrator -> Graphing -> Risk Critic -> Report -> PDF). Or directly Orchestrator -> Risk Critic if no visualization is appropriate.
 2. **Proactive Visualization**: Even if the user doesn't ask for a graph, the Orchestrator analyzes the quantitative dataset dimensions (e.g., timeseries size or forward estimate spreads) and decides if a graph would make the analysis more impactful, triggers the `graphing_agent` proactively.
 3. **Draft Audit compliance**: The final report output does not originate from a single LLM. It involves a descriptive Risk Auditor audit that enforces downside risks or forward over-optimism critiques aren't skipped in the final synthesis conducted by the `report_agent`.
 
@@ -87,7 +90,7 @@ The agent has access to **17 specialized financial tools** served by the LSEG MC
    ```
 2. Install dependencies:
    ```bash
-   pip install google-adk python-dotenv requests
+   pip install -r requirements.txt
    ```
 3. Clone this repository locally.
 
@@ -167,3 +170,5 @@ The orchestrator can delegate specialized tasks—such as dynamically generating
 *   **Candlestick Charts**: *"Get the recent daily price action for Tesla (TSLA.O). Instruct the graphing agent to render this as a candlestick chart showing the open, high, low, and close prices, and format the visual beautifully."*
 *   **Multi-Metric Scatter Plots**: *"Gather the forward P/E ratios and Dividend Yields for Apple, Microsoft, and Google based on consensus estimates. Create a scatter plot visualizing this relationship with labels for each company, then write a short thesis."*
 *   **Full Executive Thesis**: *"Act as an institutional portfolio manager. Evaluate Vodafone (VOD.L). Retrieve its historical fundamentals (2020-2023), its forward analyst consensus estimates (2024-2026), its latest news trends, and recent stock price trajectory. Graph the stock trajectory and assemble everything into an executive thesis."*
+*   **PDF Report Evaluation**: *"Run a complete analysis for Microsoft (MSFT.O) including growth metrics and news sentiment. Explicitly trigger the PDF generator step to produce a downloadable PDF file summarizing everything."*
+

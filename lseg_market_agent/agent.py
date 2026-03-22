@@ -7,6 +7,8 @@ from google import genai
 from google.adk.models import google_llm
 from google.adk.tools import google_search
 from google.adk.tools import AgentTool
+from .pdf_generator import create_pdf_report
+
 
 api_client = genai.Client(
     vertexai=True,
@@ -67,6 +69,10 @@ IMPORTANT CONSTRAINTS:
    - `universe`: Must be the RIC format (e.g., "AAPL.O").
 4. `insight_headlines` uses `rics` for companies (AAPL.O), not plain `query`.
 5. Do not guess DataStream Mnemonics for macro data, search them first using `qa_macroeconomic` list tool!
+
+CRITICAL TOOL CALLING RULES:
+1. DO NOT add any prefix to the tool names like `default_api:`. Use only the exact strings like `insight_headlines` or `tscc_interday_summaries`.
+2. If you need to make multiple tool calls in parallel, output each call correctly using the structural interface—do not concatenate string calls like `call:default_api:...`.
 """
 GRAPHING_AGENT_INSTRUCTIONS = """You are a Data Visualization and Graphing Agent.
 You are equipped with a Python code execution environment.
@@ -75,7 +81,10 @@ Support advanced formatting such as candlestick charts, moving averages, or bar 
 You MUST output the graph to the user by rendering the plot (e.g., using plt.show() in matplotlib).
 Do not guess data; strictly plot the data provided to you in the prompt.
 IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
-ROUTING INSTRUCTION: If the orchestrator instructed you to pass control to an auditor/reviewer after graphing, you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` once you have displayed the plot. If explicitly told to go to report writer, transfer to `report_agent`.
+ROUTING INSTRUCTION:
+1. First, write and execute your Python code to draw the graph.
+2. Once the graph appears in standard output/images, on your NEXT turn response, call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed).
+Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a single turn, as this parallelization triggers interface collision errors.
 """
 
 graphing_agent = LlmAgent(
@@ -115,7 +124,10 @@ You serve as the final stage of a multi-agent orchestration pipeline. You will r
 Your task is to write a highly professional, comprehensive, final Markdown report synthesizing all findings.
 Include sections such as Executive Summary, Financial Performance, Market Sentiment, Risk Analysis & Audit, and Conclusion where applicable. For the Risk section, integrate the auditing notes provided by the risk critic agent.
 DO NOT call external tools to gather data. Rely purely on the data passed to you from the orchestrator and other agents. Do not attempt to draw graphs yourself.
+
+ROUTING INSTRUCTION: Once you have written the Markdown report, you MUST call the `transfer_to_agent` tool to transfer execution to `pdf_generator_agent` so they can compile the final PDF document. Do not just stop.
 """
+
 
 report_agent = LlmAgent(
     name="report_agent",
@@ -124,11 +136,31 @@ report_agent = LlmAgent(
     instruction=REPORT_AGENT_INSTRUCTIONS
 )
 
+PDF_GENERATOR_INSTRUCTIONS = """You are a PDF Generation and Formatting Agent.
+Your task is to take the final Markdown report provided by `report_agent` and call the `create_pdf_report` tool to format it into a professional, downloadable PDF artifact.
+You do not need to rewrite or expand the report text. Simply fetch the latest response from `report_agent` and provide it directly to the tool.
+
+CRITICAL INSTRUCTION:
+1. Review the conversation history to see if the `graphing_agent` outputted any graphs / images (look for file paths ending in `.png`).
+2. If any graphs were generated, gather their exact file paths and pass them into the `image_paths` parameter list of the `create_pdf_report` tool call.
+Providing explicit paths prevents directory scanning errors and ensures only relevant charts belong in the final report.
+Once the PDF is created, respond to the user with a brief message confirming the path to the downloadable PDF file.
+"""
+
+pdf_generator_agent = LlmAgent(
+    name="pdf_generator_agent",
+    description="Generates a downloadable PDF of the final markdown report and appended visualizations.",
+    model=model,
+    instruction=PDF_GENERATOR_INSTRUCTIONS,
+    tools=[create_pdf_report]
+)
+
 print("Initializing ADK Agent and LSEG MCP Toolset...")
 root_agent = LlmAgent(
     name="lseg_market_agent",
     model=model,
     instruction=AGENT_INSTRUCTIONS,
     tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
-    sub_agents=[graphing_agent, risk_critic_agent, report_agent]
+    sub_agents=[graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
 )
+
