@@ -162,8 +162,11 @@ The real power of this integration is the LLM's ability to orchestrate multi-mod
 *   *"Price a vanilla European Call Option for Apple (AAPL.O) expiring on December 31, 2025. Set the strike at $200. What is the Delta and Vega? Note: You may need to guess current standard market parameters."*
 *   *"I want to execute a €5,000,000 FX Spot trade between EUR and USD. Price the EURUSD cross, then price a 6-month EURUSD FX Forward and compare the implied swap points."*
 *   *"Can you list the available US Treasury interest rate curves? Pick the most standard one to calculate curve points for."*
+*   **Credit & Bond Valuation**: *"For a high-leverage company like AT&T (T), inspect its corporate debt rating or credit curves to formulate an overlay regarding credit leverage health and yield spread."*
+*   **Volatility Surface Assessment**: *"Fetch the equity volatility surface for Microsoft (MSFT.O). Retrieve implied volatility gradients to determine market expectations for short-term downside risks (skew profile)."*
 
 ### **Level 4: Complex Synthesis & Multi-Agent Delegation**
+
 The orchestrator can delegate specialized tasks—such as dynamically generating Python visualizations and formatting Markdown—to its sub-agents to provide a visually compelling, presentation-ready output.
 *   **Bar Charts & Synthesis**: *"Fetch the historical EPS and Revenue for Amazon over the last 3 years. Draw a grouped bar chart of the EPS vs Revenue data. Then write a final report summarizing the trends."* 
 *   **Trend Lines & Moving Averages**: *"Retrieve Microsoft's interday stock price summary for the last month. Plot the closing prices as a line chart with a 5-day moving average overlaid. Transfer to the report agent for an executive summary."*
