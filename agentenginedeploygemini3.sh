@@ -4,7 +4,7 @@ TARGET_URL="https://discoveryengine.googleapis.com/v1alpha/projects/genaillentse
 
 JSON_DATA=$(cat <<EOF
 {
-    "displayName": "LSEG MCP Market Agent BETA - V6",
+    "displayName": "LSEG MCP Market Agent BETA - V7",
     "description": "Allows analysis of financial markets using LSEG MCP Gemini 3",
     "adk_agent_definition": 
     {
@@ -12,7 +12,7 @@ JSON_DATA=$(cat <<EOF
             "tool_description": "Various Market analysis tools via MCP"
         },
         "provisioned_reasoning_engine": {
-            "reasoning_engine":"projects/884152252139/locations/us-central1/reasoningEngines/5260556758245441536"
+            "reasoning_engine":"projects/884152252139/locations/us-central1/reasoningEngines/6141432697861439488"
         }
     }
 }
