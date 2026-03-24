@@ -1,0 +1,23 @@
+{
+  "eval_set_id": "msft_fundamentals",
+  "name": "msft_fundamentals",
+  "eval_cases": [
+    {
+      "eval_id": "msft_fundamentals",
+      "conversation": [
+        {
+          "user_content": { "parts": [{ "text": "What was Microsoft's (MSFT.O) Gross Income for 2022?" }], "role": "user" },
+          "intermediate_data": {
+            "tool_uses": [
+              { "name": "qa_company_fundamentals" },
+              { "name": "qa_company_fundamentals" },
+              { "name": "qa_company_fundamentals" },
+              { "name": "insight_headlines" },
+              { "name": "qa_ibes_consensus" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

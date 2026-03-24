@@ -1,0 +1,15 @@
+{
+  "eval_set_id": "us_macro_gdp",
+  "name": "us_macro_gdp",
+  "eval_cases": [
+    {
+      "eval_id": "us_macro_gdp",
+      "conversation": [
+        {
+          "user_content": { "parts": [{ "text": "Show me the latest US GDP and Unemployment figures." }], "role": "user" },
+          "intermediate_data": { "tool_uses": [{ "name": "qa_macroeconomic" }] }
+        }
+      ]
+    }
+  ]
+}

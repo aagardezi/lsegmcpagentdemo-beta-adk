@@ -1,0 +1,185 @@
+[
+  {
+    "name": "msft_fundamentals",
+    "data": [
+      {
+        "query": "What was Microsoft's (MSFT.O) Gross Income and EPS for 2022 and 2023?",
+        "expected_tool_use": [
+          {
+            "tool_name": "qa_company_fundamentals"
+          }
+        ],
+        "reference": "The agent should fetch Microsoft's fundamentals (Gross Income and EPS) for 2022 and 2023 using the relevant LSEG metrics."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "us_macro_gdp",
+    "data": [
+      {
+        "query": "Show me the latest US GDP and Unemployment figures (search for the Mnemonics if you don't know them).",
+        "expected_tool_use": [
+          {
+            "tool_name": "qa_macroeconomic"
+          }
+        ],
+        "reference": "The agent should query the macroeconomic database for US GDP and Unemployment."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "tsla_sentiment_headlines",
+    "data": [
+      {
+        "query": "Get me the latest insight headlines specifically mentioning Tesla (TSLA.O).",
+        "expected_tool_use": [
+          {
+            "tool_name": "insight_headlines"
+          }
+        ],
+        "reference": "The agent should query insight headlines with Tesla's RIC code."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "aapl_complete_summary",
+    "data": [
+      {
+        "query": "Analyze Apple's (AAPL.O) recent financial fundamentals, check the latest news sentiment around it, and fetch analyst consensus estimates for the next year to provide a complete investment summary.",
+        "expected_tool_use": [
+          {
+            "tool_name": "qa_company_fundamentals"
+          },
+          {
+            "tool_name": "insight_headlines"
+          },
+          {
+            "tool_name": "qa_ibes_consensus"
+          }
+        ],
+        "reference": "The agent must orchestrate across multiple sources: fundamentals, news, and consensus estimates."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "aapl_option_pricing",
+    "data": [
+      {
+        "query": "Price a vanilla European Call Option for Apple (AAPL.O) expiring on December 31, 2025. Set the strike at $200. What is the Delta and Vega?",
+        "expected_tool_use": [
+          {
+            "tool_name": "option_value"
+          }
+        ],
+        "reference": "The agent needs to call options valuation and Greeks metrics."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "eurusd_forward_comparison",
+    "data": [
+      {
+        "query": "I want to execute a €5,000,000 FX Spot trade between EUR and USD. Price the EURUSD cross, then price a 6-month EURUSD FX Forward and compare the implied swap points.",
+        "expected_tool_use": [
+          {
+            "tool_name": "fx_spot_price"
+          },
+          {
+            "tool_name": "fx_forward_price"
+          }
+        ],
+        "reference": "The agent must compare spot and forward rates using tools."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "amzn_eps_revenue_chart",
+    "data": [
+      {
+        "query": "Fetch the historical EPS and Revenue for Amazon over the last 3 years. Draw a grouped bar chart of the EPS vs Revenue data. Then write a final report summarizing the trends.",
+        "expected_tool_use": [
+          {
+            "tool_name": "qa_company_fundamentals"
+          },
+          {
+            "tool_name": "transfer_to_agent"
+          }
+        ],
+        "reference": "The agent must retrieve data and delegate to sub-agents (Graphing/Report) using transfer_to_agent tools."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "msft_interday_summary_line_chart",
+    "data": [
+      {
+        "query": "Retrieve Microsoft's interday stock price summary for the last month. Plot the closing prices as a line chart with a 5-day moving average overlaid. Transfer to the report agent for an executive summary.",
+        "expected_tool_use": [
+          {
+            "tool_name": "tscc_interday_summaries"
+          },
+          {
+            "tool_name": "transfer_to_agent"
+          }
+        ],
+        "reference": "The agent should retrieve timeseries stock data and delegate rendering."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  },
+  {
+    "name": "msft_pdf_report_compilation",
+    "data": [
+      {
+        "query": "Run a complete analysis for Microsoft (MSFT.O) including growth metrics and news sentiment. Explicitly trigger the PDF generator step to produce a downloadable PDF file summarizing everything.",
+        "expected_tool_use": [
+          {
+            "tool_name": "qa_company_fundamentals"
+          },
+          {
+            "tool_name": "insight_headlines"
+          },
+          {
+            "tool_name": "transfer_to_agent"
+          }
+        ],
+        "reference": "The agent should fetch everything and explicitly advance through Orchestrator -> Grapher -> Risk -> Report -> PDF."
+      }
+    ],
+    "initial_session": {
+      "app_name": "lseg_adk_demo",
+      "user_id": "default_user"
+    }
+  }
+]
