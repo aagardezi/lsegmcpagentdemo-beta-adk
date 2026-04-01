@@ -30,7 +30,7 @@ async def main():
                 agent_module=agent_module,
                 eval_dataset_file_path_or_dir=eval_dataset,
                 num_runs=1,
-                print_detailed_results=False # Set to false to reduce noise
+                print_detailed_results=True # Set to true to get more details on failures
             )
             print(f"✅ PASSED {eval_dataset}")
         except Exception as e:
