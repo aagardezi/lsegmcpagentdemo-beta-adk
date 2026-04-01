@@ -175,3 +175,56 @@ The orchestrator can delegate specialized tasks—such as dynamically generating
 *   **Full Executive Thesis**: *"Act as an institutional portfolio manager. Evaluate Vodafone (VOD.L). Retrieve its historical fundamentals (2020-2023), its forward analyst consensus estimates (2024-2026), its latest news trends, and recent stock price trajectory. Graph the stock trajectory and assemble everything into an executive thesis."*
 *   **PDF Report Evaluation**: *"Run a complete analysis for Microsoft (MSFT.O) including growth metrics and news sentiment. Explicitly trigger the PDF generator step to produce a downloadable PDF file summarizing everything."*
 
+---
+
+## 📊 Automated Evaluations (ADK Evals)
+
+The project includes an automated evaluation suite powered by the Google ADK's `AgentEvaluator`. This allows you to verify that the agent is calling the correct tools for specific user prompts without manual interaction.
+
+### 🔍 What is There?
+The `evals/` directory contains JSON-based test cases (e.g., `lseg_market_evals.test.json`, `case_1_msft.test.json`). These files define:
+- **`user_content`**: The prompt sent to the agent.
+- **`intermediate_data.tool_uses`**: The expected tool calls (by name) that the agent must make to successfully resolve the prompt.
+
+### ⚙️ How It Works
+The evaluation system uses the `AgentEvaluator.evaluate` method from the Google ADK. It:
+1. Spins up the `lseg_market_agent`.
+2. Passes the user prompt from the JSON file to the agent.
+3. Captures the agent's tool calls and compares them against the expected `tool_uses` defined in the JSON.
+4. Reports success (`✅ PASSED`) or failure (`❌ FAILED`) based on whether the expected tools were invoked.
+
+### 🏃 How to Use It
+
+There are two ways to run the evaluations: using the provided Python script or via the ADK CLI.
+
+#### Method 1: Using the Python Script
+This is the easiest way to run all test cases sequentially:
+
+```bash
+python3.12 run_evals.py
+```
+
+#### Method 2: Using the ADK CLI
+If you have the `adk` CLI installed in your environment, you can use the `adk eval` command to run evaluations directly for the `lseg_market_agent` module:
+
+```bash
+adk eval lseg_market_agent evals/case_1_msft.test.json
+```
+
+Or run all evaluations by passing multiple files:
+```bash
+adk eval lseg_market_agent evals/*.test.json
+```
+
+You should see output similar to:
+```text
+Starting evaluations for 'lseg_market_agent'...
+Found 3 test files.
+
+--- Running evaluation with dataset: evals/case_1_msft.test.json ---
+✅ PASSED evals/case_1_msft.test.json
+
+--- Running evaluation with dataset: evals/case_2_gdp.test.json ---
+✅ PASSED evals/case_2_gdp.test.json
+...
+```

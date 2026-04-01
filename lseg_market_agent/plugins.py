@@ -18,7 +18,7 @@ class ReportGraphFixerPlugin(BasePlugin):
     saves them to local files OR uploads to Google Cloud Storage (GCS),
     and updates the report markdown with the correct path or URL.
     """
-    def __init__(self, output_dir: str = "generated_reports/images", gcs_bucket: Optional[str] = None):
+    def __init__(self, output_dir: str = "helpercode/generated_reports/images", gcs_bucket: Optional[str] = None):
         from dotenv import load_dotenv
         load_dotenv() # Force reading isolat d local .env if uploaded in package bundle
         super().__init__(name="report_graph_fixer")
