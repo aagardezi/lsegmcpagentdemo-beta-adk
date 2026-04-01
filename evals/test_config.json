@@ -1,5 +1,15 @@
 {
   "criteria": {
     "tool_trajectory_avg_score": 0.5
+  },
+
+  "custom_metrics": {
+    "tool_trajectory_avg_score": {
+      "code_config": {
+        "name": "lseg_market_agent.custom_metrics.name_only_in_order_match"
+      }
+
+    }
   }
 }
+

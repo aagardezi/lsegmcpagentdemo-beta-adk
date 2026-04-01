@@ -10,8 +10,6 @@
           "intermediate_data": {
             "tool_uses": [
               { "name": "qa_company_fundamentals" },
-              { "name": "qa_company_fundamentals" },
-              { "name": "qa_company_fundamentals" },
               { "name": "insight_headlines" },
               { "name": "qa_ibes_consensus" }
             ]
