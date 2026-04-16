@@ -3,6 +3,7 @@ from google.adk.code_executors import BuiltInCodeExecutor
 from . import mcp_client_bridge
 from .config import config
 from .helpercode import get_project_id
+from .skills_agents import equity_research_agent, macro_rates_agent
 from google import genai
 from google.adk.models import google_llm
 from google.adk.tools import google_search
@@ -51,13 +52,14 @@ You have access to a rich set of financial tools:
 
 
 When the user asks you to analyze a company or market condition, you should act as an Orchestrator:
-1. Proactively gather information from AT LEAST THREE tools (e.g. Fundamentals, Forward Estimates, and News Headlines). Gather as much detailed numerical history and news scope as possible to ensure subsequent agents have rich context. For advanced capital or risk analyses, optionally leverage options/bonds/FX pricing to provide deeper risk audits.
-2. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
-3. Always cite the specific metrics and news stories retrieved. 
-4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, bar chart of EPS estimates) would make the final answer or report more compelling, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style and supply the numerical data.
+1. **Specialized Skills**: If the user's request matches a specialized skill (e.g., deep-dive "Equity Research" or "Macro Rates Monitor"), you MUST delegate the execution to the corresponding subagent (`equity_research_agent` or `macro_rates_agent`). These agents have optimized workflows and output formats for these specific tasks. If you delegate, do not attempt to do the analysis yourself first.
+2. Proactively gather information from AT LEAST THREE tools (e.g. Fundamentals, Forward Estimates, and News Headlines) if you are doing a general analysis. Gather as much detailed numerical history and news scope as possible to ensure subsequent agents have rich context. For advanced capital or risk analyses, optionally leverage options/bonds/FX pricing to provide deeper risk audits.
+3. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
+4. Always cite the specific metrics and news stories retrieved. 
+5. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, bar chart of EPS estimates) would make the final answer or report more compelling, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style and supply the numerical data.
    - Ensure you state in your delegation prompt *why* this graph is helpful and how to style it.
    - If a final report or risk audit is part of the flow, explicitly instruct the graphing agent to transfer to `risk_critic_agent` afterwards.
-5. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or they are already complete, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
+6. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or they are already complete, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:
@@ -85,10 +87,11 @@ When you receive instructions along with numerical data, write a Python script (
 Support advanced formatting such as candlestick charts, moving averages, or bar charts when requested. If `mplfinance` is unavailable, gracefully fall back to configuring `matplotlib` for the requested style.
 You MUST output the graph to the user by rendering the plot (e.g., using plt.show() in matplotlib).
 Do not guess data; strictly plot the data provided to you in the prompt.
-IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
+IMPORTANT: Do NOT output the raw Python code text in your response.
 ROUTING INSTRUCTION:
 1. First, write and execute your Python code to draw the graph.
-2. Once the graph appears in standard output/images, on your NEXT turn response, call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed).
+2. Once the graph is drawn (you see the image in standard output), you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed).
+3. When calling `transfer_to_agent`, do NOT generate any text explanation or confirmation message. Only call the tool. Generating text will cause the flow to stop.
 Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a single turn, as this parallelization triggers interface collision errors.
 """
 
@@ -99,6 +102,7 @@ graphing_agent = LlmAgent(
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
     code_executor=BuiltInCodeExecutor()
 )
+
 
 RISK_CRITIC_AGENT_INSTRUCTIONS = """You are a Risk Management & Compliance Auditor.
 Your task is to review the financial data, sentiment, and initial thesis components provided by the orchestrator.
@@ -207,6 +211,6 @@ root_agent = LlmAgent(
     model=model,
     instruction=AGENT_INSTRUCTIONS,
     tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
-    sub_agents=[graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
+    sub_agents=[equity_research_agent, macro_rates_agent, graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
 )
 

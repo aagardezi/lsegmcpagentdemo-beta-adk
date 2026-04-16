@@ -12,10 +12,14 @@ The architecture illustrates a powerful synergy between the Google ADK and LSEG'
 
 1. **Multi-Agent Orchestration (Google ADK)**: The system is structured using a multi-agent framework:
    - **Root Orchestrator (`lseg_market_agent`)**: Acts as the cognitive orchestration engine. It autonomously queries the LSEG tools, tracks context, and decides which sub-agents to delegate to.
-   - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots, candlestick charts, and visualizations. Its visual choice operates proactively based on retrieved dataset dimensions.
-   - **Risk Auditor Sub-Agent (`risk_critic_agent`)**: Critiques the gathered financial analysis for over-optimism, evaluates downside risks, and suggests hedging notes alongside synthesis.
-   - **Report Writer Sub-Agent (`report_agent`)**: Synthesizes all gathered data, risk audits, and visual inferences into a final, comprehensive, and professional Markdown report.
-   - **PDF Generator Sub-Agent (`pdf_generator_agent`)**: Compiles the final Markdown report and any visual plots into a professional, downloadable PDF artifact.
+   - **Specialized Skills Agents**:
+     - **Equity Research Sub-Agent (`equity_research_agent`)**: Generates comprehensive equity research snapshots combining consensus estimates, fundamentals, price history, and macro data.
+     - **Macro Rates Monitor Sub-Agent (`macro_rates_agent`)**: Builds macroeconomic and rates dashboards combining yield curves, inflation breakevens, and swap rates.
+   - **Utility Sub-Agents**:
+     - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots, candlestick charts, and visualizations.
+     - **Risk Auditor Sub-Agent (`risk_critic_agent`)**: Critiques the gathered financial analysis for over-optimism, evaluates downside risks, and suggests hedging notes.
+     - **Report Writer Sub-Agent (`report_agent`)**: Synthesizes all gathered data, risk audits, and visual inferences into a final, comprehensive, and professional Markdown report.
+     - **PDF Generator Sub-Agent (`pdf_generator_agent`)**: Compiles the final Markdown report and any visual plots into a professional, downloadable PDF artifact.
 
 2. **MCP HTTP Client Bridge**: Rather than using standard I/O (stdio) proxy executables, this application natively binds to the LSEG HTTP MCP endpoint `https://api.analytics.lseg.com/lfa/mcp` using ADK's `StreamableHTTPConnectionParams`.
 3. **LSEG Authentication**: Handled automatically in Python by `mcp_client_bridge.py`, fetching an ephemeral JWT token via OAuth2 client-credentials logic to secure the MCP communication seamlessly.
@@ -174,6 +178,14 @@ The orchestrator can delegate specialized tasks—such as dynamically generating
 *   **Multi-Metric Scatter Plots**: *"Gather the forward P/E ratios and Dividend Yields for Apple, Microsoft, and Google based on consensus estimates. Create a scatter plot visualizing this relationship with labels for each company, then write a short thesis."*
 *   **Full Executive Thesis**: *"Act as an institutional portfolio manager. Evaluate Vodafone (VOD.L). Retrieve its historical fundamentals (2020-2023), its forward analyst consensus estimates (2024-2026), its latest news trends, and recent stock price trajectory. Graph the stock trajectory and assemble everything into an executive thesis."*
 *   **PDF Report Evaluation**: *"Run a complete analysis for Microsoft (MSFT.O) including growth metrics and news sentiment. Explicitly trigger the PDF generator step to produce a downloadable PDF file summarizing everything."*
+
+### **Level 5: Specialized Skills Workflows**
+
+These queries trigger the newly integrated specialized subagents (`equity_research_agent` and `macro_rates_agent`) which follow strict, optimized workflows and output formats (standardized Markdown tables).
+
+*   **Equity Research Deep Dive**: *"Perform a deep-dive Equity Research on Tesla (TSLA.O). Use the Equity Research skill workflow: Consensus, Fundamentals, Price, and Macro context."*
+*   **Macro Rates Monitor**: *"Build a Macroeconomic and Rates Monitor dashboard for the United States. Include GDP/CPI indicators, yield curve snapshot, and real rate decomposition."*
+*   **Skill Composition (Advanced)**: *"Use the Equity Research skill to analyze Amazon (AMZN.O). Once done, ensure the system generates a professional report and PDF."*
 
 ---
 
