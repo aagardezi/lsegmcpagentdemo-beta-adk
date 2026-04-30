@@ -1,14 +1,13 @@
+from google import genai
 from google.adk.agents import LlmAgent
 from google.adk.code_executors import BuiltInCodeExecutor
+from google.adk.models import google_llm
+from google.adk.tools import AgentTool, google_search
+
 from . import mcp_client_bridge
 from .config import config
 from .helpercode import get_project_id
-from google import genai
-from google.adk.models import google_llm
-from google.adk.tools import google_search
-from google.adk.tools import AgentTool
 from .pdf_generator import create_pdf_report
-
 
 api_client = genai.Client(
     vertexai=True,
@@ -16,7 +15,7 @@ api_client = genai.Client(
     location="global"
 )
 model = google_llm.Gemini(model=config.gemini_model)
-model.api_client= api_client 
+model.api_client= api_client
 
 
 RIC_RESOLVER_INSTRUCTION = (
@@ -85,11 +84,12 @@ When you receive instructions along with numerical data, write a Python script (
 Support advanced formatting such as candlestick charts, moving averages, or bar charts when requested. If `mplfinance` is unavailable, gracefully fall back to configuring `matplotlib` for the requested style.
 You MUST output the graph to the user by rendering the plot (e.g., using plt.show() in matplotlib).
 Do not guess data; strictly plot the data provided to you in the prompt.
+Ensure your Python code is well-formatted with proper newlines separating statements. Do not concatenate multiple imports or statements on a single line.
 IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
 ROUTING INSTRUCTION:
 1. First, write and execute your Python code to draw the graph.
-2. Once the graph appears in standard output/images, on your NEXT turn response, call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed).
-Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a single turn, as this parallelization triggers interface collision errors.
+2. Once the code execution completes and the graph is generated, in your very next response (which the framework will automatically request after tool execution), you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed). Do not wait for further user input.
+Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a single turn.
 """
 
 graphing_agent = LlmAgent(
@@ -132,8 +132,6 @@ Your task is to write a highly professional, comprehensive, and structured Markd
 ### REPORT STRUCTURE REQUIREMENTS:
 Your response MUST be a single Markdown document following this exact structure:
 
----
-
 # [Company Name / Asset] - Market Intelligence Report
 *Date: [Current Date / Period]*
 
@@ -161,7 +159,6 @@ Your response MUST be a single Markdown document following this exact structure:
 - Synthesize the above sections into a 2-paragraph forward-looking conclusion outlining the primary bear and bull scenarios.
 - If the Graphing Agent generated visualisations, add a note directing the reader to the **Appendix** at the bottom of the PDF for the visual charts.
 
----
 
 ### STYLE & FORMATTING RULES:
 1. **No Brief Summaries Clause**: Do not condense findings into high-level generic statements. For example, instead of "Revenue is up", write "Revenue grew 12% to $1.2B, driven by resilient volume growth and pricing power."
@@ -210,3 +207,6 @@ root_agent = LlmAgent(
     sub_agents=[graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
 )
 
+from google.adk.apps import App
+
+app = App(root_agent=root_agent, name="lseg_market_agent")

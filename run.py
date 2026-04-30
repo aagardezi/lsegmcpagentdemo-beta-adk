@@ -1,24 +1,24 @@
 import argparse
 import asyncio
-import os
 import sys
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
 # Load local .env
 load_dotenv()
 
-from lseg_market_agent.agent import root_agent
-
 # Use the logging utility exactly as GEMINI.MD suggests
 from google.adk.cli.utils import logs
+
+from lseg_market_agent.agent import root_agent
+
 logs.log_to_tmp_folder()
 
 async def main():
     parser = argparse.ArgumentParser(description="LSEG ADK Demo Runner")
-    parser.add_argument("--prompt", type=str, required=False, 
+    parser.add_argument("--prompt", type=str, required=False,
                         default="Analyze Apple's (AAPL.O) recent financial fundamentals, check the latest news sentiment around it, fetch analyst consensus estimates for the next year, and overlay recent US macroeconomic conditions (like CPI & GDP) to provide a complete investment summary.")
     args = parser.parse_args()
 
@@ -46,7 +46,7 @@ async def main():
     )
 
     final_response = None
-    
+
     print("LLM is processing (this may take a minute with multiple tool calls)...")
     try:
         async for event in runner.run_async(
@@ -67,7 +67,7 @@ async def main():
     print("\n" + "="*80)
     print("FINAL AGENT RESPONSE")
     print("="*80 + "\n")
-    
+
     if final_response and final_response.content and final_response.content.parts:
         print(final_response.content.parts[0].text)
     else:

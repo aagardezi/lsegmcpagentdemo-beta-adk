@@ -1,9 +1,9 @@
 import os
 import re
-from typing import Optional
-from google.adk.plugins import BasePlugin
-from google.adk.events import Event
+
 from google.adk.agents import InvocationContext
+from google.adk.events import Event
+from google.adk.plugins import BasePlugin
 
 # Lazy import to avoid crash if not installed for local-only execution
 # google-cloud-storage will be needed for Agent Engine
@@ -18,7 +18,7 @@ class ReportGraphFixerPlugin(BasePlugin):
     saves them to local files OR uploads to Google Cloud Storage (GCS),
     and updates the report markdown with the correct path or URL.
     """
-    def __init__(self, output_dir: str = "helpercode/generated_reports/images", gcs_bucket: Optional[str] = None):
+    def __init__(self, output_dir: str = "helpercode/generated_reports/images", gcs_bucket: str | None = None):
         from dotenv import load_dotenv
         load_dotenv() # Force reading isolat d local .env if uploaded in package bundle
         super().__init__(name="report_graph_fixer")
@@ -27,7 +27,7 @@ class ReportGraphFixerPlugin(BasePlugin):
 
     async def on_event_callback(
         self, *, invocation_context: InvocationContext, event: Event
-    ) -> Optional[Event]:
+    ) -> Event | None:
         # Intercept any agent that references graphs
         if not event.content or not event.content.parts:
             return None
@@ -78,7 +78,7 @@ class ReportGraphFixerPlugin(BasePlugin):
                     blob_path = f"graphs/{filename}"
                     blob = bucket.blob(blob_path)
                     blob.upload_from_string(image_data, content_type=mime)
-                    
+
                     public_url = f"https://storage.googleapis.com/{self.gcs_bucket}/{blob_path}"
                     image_paths.append(public_url)
                     print(f"[Plugin] Saved graph file to GCS: {public_url}")
@@ -104,7 +104,7 @@ class ReportGraphFixerPlugin(BasePlugin):
         updated_text = report_text
         pattern = r"!\[.*?\]\(.*?\)"
         matches = list(re.finditer(pattern, updated_text))
-        
+
         if matches and len(matches) <= len(image_paths):
             print(f"[Plugin] Found {len(matches)} image placeholders. Replacing...")
             for match, path in zip(matches, image_paths):

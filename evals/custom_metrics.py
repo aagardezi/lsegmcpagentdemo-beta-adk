@@ -1,6 +1,7 @@
-from google.adk.evaluation.evaluator import EvaluationResult, PerInvocationResult
-from google.adk.evaluation.eval_metrics import EvalStatus
 from google.adk.evaluation.eval_case import get_all_tool_calls
+from google.adk.evaluation.eval_metrics import EvalStatus
+from google.adk.evaluation.evaluator import EvaluationResult, PerInvocationResult
+
 
 def name_only_in_order_match(
     eval_metric,
@@ -23,14 +24,14 @@ def name_only_in_order_match(
 
         match = False
         if not expected_calls:
-            match = True # No expected tools, vacuously pass? Or fail if actual has tools? 
+            match = True # No expected tools, vacuously pass? Or fail if actual has tools?
             # Standard TrajectoryEvaluator says if not expected, True.
         elif not actual_calls:
             match = False
         else:
             expected_names = set([c.name for c in expected_calls])
             actual_names = set([c.name for c in actual_calls])
-            
+
             # Subset matching (order-independent)
             match = expected_names.issubset(actual_names)
 
@@ -41,7 +42,7 @@ def name_only_in_order_match(
 
         # Use criterion.threshold as fallback since framework clears eval_metric.threshold for custom metrics
         threshold = eval_metric.criterion.threshold if eval_metric.criterion else 0.5
-        
+
         per_invocation_results.append(PerInvocationResult(
             actual_invocation=actual,
             expected_invocation=expected,

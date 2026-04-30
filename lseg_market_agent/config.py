@@ -1,4 +1,3 @@
-import os
 from dataclasses import dataclass
 
 
@@ -12,7 +11,7 @@ class ResearchConfiguration:
     gemini_model: str = "gemini-3.1-pro-preview"
     gemini_3_pro_model: str = "gemini-3-pro-preview"
 
-    
+
 
 
 config = ResearchConfiguration()

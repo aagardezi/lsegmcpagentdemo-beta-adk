@@ -7,7 +7,7 @@ if not os.path.exists(file_path):
     print(f"File not found at {file_path}")
     exit(1)
 
-with open(file_path, 'r') as f:
+with open(file_path) as f:
     text = f.read()
 
 # remove 'data: ' prefix if present (the grep output from before showed it)

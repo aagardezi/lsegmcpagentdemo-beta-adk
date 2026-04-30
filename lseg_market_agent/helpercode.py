@@ -1,12 +1,11 @@
+import hashlib
+import logging
+import tempfile
+
+import google.auth
 import requests
 from bs4 import BeautifulSoup
-import tempfile
-import logging
 from google.cloud import secretmanager
-import google.auth
-import datetime
-import hashlib
-
 
 logger = logging.getLogger("MarketMind")
 
@@ -33,11 +32,11 @@ def get_text_from_url(url):
         soup = BeautifulSoup(response.content, "html.parser")
         text = soup.get_text(strip=True) # Extracts and cleans all text from the HTML
         return text
-    
+
     except requests.exceptions.RequestException as e:
         print(f"Error fetching URL: {e}")
         return ""
-    
+
 
 def access_secret_version(project_id, secret_id, version_id="latest"):
     """
@@ -66,8 +65,8 @@ def create_temp_credentials_file(credentials_json):
         temp_file.write(credentials_json)
     temp_file_path = temp_file.name
     logger.warning(temp_file_path)
-    
-    with open(temp_file_path, 'r', encoding='utf-8') as f:  # Opens the file in read mode with UTF-8 encoding
+
+    with open(temp_file_path, encoding='utf-8') as f:  # Opens the file in read mode with UTF-8 encoding
         contents = f.read()
         logger.warning(contents)
 
@@ -87,7 +86,7 @@ def get_project_id():
     except google.auth.exceptions.DefaultCredentialsError as e:
         print(f"Error: Could not determine the project ID. {e}")
         return None
-  
+
 # def _get_session():
 #     from streamlit.runtime import get_instance
 #     from streamlit.runtime.scriptrunner import get_script_run_ctx

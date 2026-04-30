@@ -1,15 +1,16 @@
 import os
+
 import requests
-import json
+
 
 def get_lseg_token() -> str:
     """Fetches the LSEG Authorization JWT using client-credentials."""
     client_id = os.getenv("LSEG_CLIENT_ID")
     client_secret = os.getenv("LSEG_CLIENT_SECRET")
-    
+
     if not client_id or not client_secret:
         raise ValueError("LSEG_CLIENT_ID and LSEG_CLIENT_SECRET must be set in the environment.")
-        
+
     url = "https://login.ciam.refinitiv.com/as/token.oauth2"
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     data = {
@@ -18,19 +19,20 @@ def get_lseg_token() -> str:
         "client_secret": client_secret,
         "scope": "lfa"
     }
-    
+
     print("Fetching new LSEG access token...")
     response = requests.post(url, headers=headers, data=data)
     response.raise_for_status()
-    
+
     token = response.json().get("access_token")
     if not token:
         raise ValueError("Failed to retrieve access token from LSEG")
-        
+
     return token
 
 # Load environment variables from .env
 from dotenv import load_dotenv
+
 load_dotenv()
 
 try:

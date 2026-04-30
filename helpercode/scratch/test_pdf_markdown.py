@@ -4,9 +4,11 @@ import sys
 # Install fpdf2 and markdown2
 subprocess.check_call([sys.executable, "-m", "pip", "install", "fpdf2", "markdown2", "--index-url", "https://pypi.org/simple/"])
 
-from fpdf import FPDF
-import markdown2
 import os
+
+import markdown2
+from fpdf import FPDF
+
 
 class MYPDF(FPDF):
     def header(self):

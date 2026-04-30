@@ -1,9 +1,9 @@
 import os
-import glob
-from fpdf import FPDF
+
 import markdown2
-import urllib.request
+from fpdf import FPDF
 from google.genai import types
+
 
 class ReportPDF(FPDF):
     def header(self):
@@ -31,7 +31,7 @@ def _cleanse_text(text: str) -> str:
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
-        
+
     fixed_chars = []
     for char in text:
         try:
@@ -43,8 +43,8 @@ def _cleanse_text(text: str) -> str:
     return "".join(fixed_chars)
 
 async def create_pdf_report(
-    markdown_content: str, 
-    image_paths: list = None, 
+    markdown_content: str,
+    image_paths: list = None,
     artifact_name: str = "financial_report.pdf",
     tool_context = None
 ) -> str:
@@ -87,7 +87,7 @@ async def create_pdf_report(
              # Try adding a new page in case state of page was rolling back
              pdf.add_page()
         except Exception:
-             pass 
+             pass
         pdf.set_font('helvetica', '', 11)
         pdf.multi_cell(0, 10, f"Error rendering HTML template. Appending raw content:\n\n{markdown_content}")
 
@@ -97,7 +97,7 @@ async def create_pdf_report(
         pdf.set_font('helvetica', 'B', 14)
         pdf.cell(0, 10, 'Generated Visualisations', ln=1)
         pdf.ln(5)
-        
+
         for img_path in image_paths:
             try:
                 # Load from artifact service first
@@ -121,7 +121,7 @@ async def create_pdf_report(
                 if not os.path.exists(img_path):
                     print(f"[PDF Generator] Image path does not exist: {img_path}")
                     continue
-                    
+
                 pdf.image(img_path, x=10, y=None, w=180)
                 pdf.ln(10)
                 os.remove(img_path)

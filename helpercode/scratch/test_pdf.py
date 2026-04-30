@@ -4,8 +4,10 @@ import sys
 # Install fpdf2
 subprocess.check_call([sys.executable, "-m", "pip", "install", "fpdf2", "--index-url", "https://pypi.org/simple/"])
 
-from fpdf import FPDF
 import os
+
+from fpdf import FPDF
+
 
 class MYPDF(FPDF):
     def header(self):
@@ -27,6 +29,7 @@ pdf.multi_cell(0, 10, "This is a test report.\nHere is some numerical analysis."
 
 # Add an image (I'll download a placeholder just to test)
 import urllib.request
+
 try:
     urllib.request.urlretrieve("https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png", "test_image.png")
     pdf.image("test_image.png", x=10, y=None, w=100)

@@ -1,7 +1,8 @@
 import asyncio
+import glob
 import os
 import sys
-import glob
+
 from dotenv import load_dotenv
 
 # Load local .env for Google Cloud and LSEG MCP Client authentication
@@ -9,15 +10,18 @@ load_dotenv()
 
 from google.adk.evaluation.agent_evaluator import AgentEvaluator
 
+
 async def main():
     agent_module = "lseg_market_agent"
-    
+
     # Optional: ensure we can be executed from workspace root or find the agent
     sys.path.insert(0, os.path.abspath("."))
 
-    from google.adk.evaluation.metric_evaluator_registry import DEFAULT_METRIC_EVALUATOR_REGISTRY
     from google.adk.evaluation.custom_metric_evaluator import _CustomMetricEvaluator
-    from google.adk.evaluation.eval_metrics import MetricInfo, MetricValueInfo, Interval
+    from google.adk.evaluation.eval_metrics import Interval, MetricInfo, MetricValueInfo
+    from google.adk.evaluation.metric_evaluator_registry import (
+        DEFAULT_METRIC_EVALUATOR_REGISTRY,
+    )
 
     # Register custom evaluator for tool_trajectory_avg_score programmatically
     # This overrides the default strict TrajectoryEvaluator

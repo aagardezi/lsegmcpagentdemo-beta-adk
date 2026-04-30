@@ -1,18 +1,19 @@
 import asyncio
-import os
-import sys
+
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from google.adk.runners import InMemoryRunner
 from google.genai import types
+
 from lseg_market_agent.agent import root_agent
+
 
 async def main():
     print("Initializing InMemoryRunner with root_agent...")
     runner = InMemoryRunner(agent=root_agent, app_name="debug")
-    
+
     session = await runner.session_service.create_session(
         app_name="debug", user_id="default_user"
     )

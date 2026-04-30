@@ -1,12 +1,12 @@
 import subprocess
 import sys
-import os
 
 # Install fpdf2 and markdown2
 subprocess.check_call([sys.executable, "-m", "pip", "install", "fpdf2", "markdown2", "--index-url", "https://pypi.org/simple/"])
 
-from fpdf import FPDF
 import markdown2
+from fpdf import FPDF
+
 
 def cleanse_text_extended(text: str) -> str:
     """Bulletproof cleanser for FPDF core fonts."""
@@ -21,7 +21,7 @@ def cleanse_text_extended(text: str) -> str:
     }
     for k, v in replacements.items():
         text = text.replace(k, v)
-        
+
     # 2. Strict encoder fallback: replace any absolute unencodable character with '?'
     fixed_chars = []
     for char in text:
