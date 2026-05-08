@@ -17,6 +17,15 @@ api_client = genai.Client(
 model = google_llm.Gemini(model=config.gemini_model)
 model.api_client= api_client
 
+api_client31 = genai.Client(
+    vertexai=True,
+    project=get_project_id(),
+    location="global"
+)
+
+
+model31 = google_llm.Gemini(model=config.gemini31_model)
+model31.api_client= api_client31
 
 RIC_RESOLVER_INSTRUCTION = (
     "You are a stock RIC Code or Symbol resolver. "
@@ -95,7 +104,8 @@ Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a sing
 graphing_agent = LlmAgent(
     name="graphing_agent",
     description="Draws financial graphs, plots, and visualizes data using python.",
-    model=model,
+    model=model31,
+    # model="gemini-3.1-pro-preview",
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
     code_executor=BuiltInCodeExecutor()
 )
