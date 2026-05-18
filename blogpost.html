@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bridging Institutional Data with Collaborative AI: The LSEG & Google ADK Market Intelligence Agent</title>
+    <style>
+        :root {
+            --color-primary: #039be5;
+            --color-primary-light: #e1f5fe;
+            --color-text: #2c3e50;
+            --color-bg: #fcfcfc;
+            --color-card-bg: #ffffff;
+            --color-border: #e1e4e8;
+            --color-code-bg: #f6f8fa;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: var(--color-card-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        h1, h2, h3, h4 {
+            font-weight: 600;
+            color: #1a2530;
+            margin-top: 24px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 2.2em;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+
+        h2 {
+            font-size: 1.6em;
+            border-bottom: 1px solid var(--color-border);
+            padding-bottom: 6px;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        ul, ol {
+            padding-left: 2em;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 85%;
+            background-color: var(--color-code-bg);
+            padding: 0.2em 0.4em;
+            border-radius: 3px;
+        }
+
+        pre {
+            background-color: var(--color-code-bg);
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        table th, table td {
+            padding: 6px 13px;
+            border: 1px solid var(--color-border);
+        }
+
+        table tr {
+            background-color: #fff;
+            border-top: 1px solid #c6cbd1;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f6f8fa;
+        }
+
+        blockquote {
+            margin: 0 0 16px 0;
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid #dfe2e5;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            margin: 24px auto;
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        hr {
+            height: 0.25em;
+            padding: 0;
+            margin: 24px 0;
+            background-color: var(--color-border);
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="bridging-institutional-data-with-collaborative-ai-the-lseg-google-adk-market-intelligence-agent">Bridging Institutional Data with Collaborative AI: The LSEG &amp; Google ADK Market Intelligence Agent</h1>
+
+<p>Modern financial markets move at a breakneck pace. As an equity analyst, portfolio manager, or corporate treasurer, answering a single complex question—such as assessing a company's health and formulating a risk-hedged investment thesis—requires hours of fragmented research. You must pull historical balance sheets, extract analyst consensus targets, analyze the latest news sentiment, map volatility curves, generate visualizations, audit the data for compliance, and finally compile everything into an executive-ready report.</p>
+
+<p>What if a collaborative team of specialized AI agents could do all this for you in a matter of seconds, with access to real-time institutional-grade data?</p>
+
+<p>Today, we are introducing the <strong>Cross-Asset Market Intelligence &amp; Valuation Agent</strong>, a state-of-the-art multi-agent system built on the <strong>Google Agent Development Kit (ADK)</strong> and powered by <strong>LSEG's Model Context Protocol (MCP)</strong> server. This project showcases the next generation of AI-driven financial reasoning, combining deep quantitative metrics with institutional compliance and automated executive publishing.</p>
+
+<hr />
+
+<h2 id="the-architectural-blueprint-collaborative-multi-agent-ai">🏗️ The Architectural Blueprint: Collaborative Multi-Agent AI</h2>
+
+<p>At the heart of this project is a <strong>collaborative multi-agent framework</strong> managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of five specialized agents, each with a distinct role, clear operational constraints, and a strict <strong>Chain of Custody</strong>.</p>
+
+<p><img src="pipeline_flowchart.png" alt="Agent Pipeline Flowchart" /></p>
+
+<p>Let's look at the specialized roles that form this elite team:</p>
+
+<h3 id="1-the-root-orchestrator-lseg_market_agent">1. The Root Orchestrator (<code>lseg_market_agent</code>)</h3>
+
+<p>The Orchestrator is the cognitive engine of the pipeline. When a user submits a query, the Orchestrator:
+- Resolves ambiguous company names to official stock RIC (Reuters Instrument Code) symbols using a dedicated Google Search sub-agent (<code>ric_resolver</code>).
+- Autonomously selects and queries the necessary LSEG MCP tools (requiring at least three tools, such as fundamentals, consensus, and news, to build rich context).
+- Tracks conversation context and decides which sub-agent to delegate to next.</p>
+
+<h3 id="2-the-python-graphing-sub-agent-graphing_agent">2. The Python Graphing Sub-Agent (<code>graphing_agent</code>)</h3>
+
+<p>Equipped with a secure, sandboxed <strong>Python Code Execution environment</strong> (<code>BuiltInCodeExecutor</code>), this agent dynamically writes and runs Python scripts (using libraries like <code>matplotlib</code>, <code>pandas</code>, or <code>mplfinance</code>) to plot financial data. It is capable of generating grouped bar charts for fundamentals, line charts for trend lines and moving averages, and high-fidelity candlestick charts for interday price action.</p>
+
+<h3 id="3-the-risk-auditor-sub-agent-risk_critic_agent">3. The Risk Auditor Sub-Agent (<code>risk_critic_agent</code>)</h3>
+
+<p>Compliance and risk management are paramount in finance. The Risk Auditor critiques the gathered financial data, looking strictly for:
+- <strong>Downside Risks</strong>: Missed macroeconomic headwinds (e.g., inflation, rate hikes) or company-specific deceleration.
+- <strong>Over-optimism</strong>: Forward consensus and headlines that appear overly bullish relative to historical hard metrics.
+- <strong>Risk Mitigation</strong>: Practical hedging strategies (e.g., protective puts or options overlays) to protect positions.</p>
+
+<h3 id="4-the-report-writer-sub-agent-report_agent">4. The Report Writer Sub-Agent (<code>report_agent</code>)</h3>
+
+<p>The Report Writer acts as an elite institutional equity research analyst. It synthesizes raw financial tables, sentiment data, visual inferences, and the compliance audit into a comprehensive, structured Markdown document in the style of top-tier investment bank reports.</p>
+
+<h3 id="5-the-pdf-generator-sub-agent-pdf_generator_agent">5. The PDF Generator Sub-Agent (<code>pdf_generator_agent</code>)</h3>
+
+<p>The final touch. This agent uses a custom Python FPDF implementation to programmatically parse the report markdown and cleanly append any generated visualization PNGs into a beautiful, downloadable PDF report.</p>
+
+<hr />
+
+<h2 id="under-the-hood-natively-bridging-lseg-mcp-google-adk">🔌 Under the Hood: Natively Bridging LSEG MCP &amp; Google ADK</h2>
+
+<p>A key technical highlight of this demonstration is its integration mechanism. Rather than spinning up standard stdio (command-line subprocess) proxies for the LSEG MCP server, the system natively binds to LSEG's remote HTTP MCP endpoint:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c1"># Natively creating the authenticated MCP connection using ADK</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_lseg_mcp_toolset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">MCPToolset</span><span class="p">:</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">get_lseg_token</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">MCPToolset</span><span class="p">(</span>
+        <span class="n">connection_params</span><span class="o">=</span><span class="n">StreamableHTTPConnectionParams</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="s2">&quot;https://api.analytics.lseg.com/lfa/mcp&quot;</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">},</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="mf">180.0</span>
+        <span class="p">),</span>
+        <span class="n">header_provider</span><span class="o">=</span><span class="n">lseg_header_provider</span>
+    <span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="secure-jwt-authentication-auto-refresh">Secure JWT Authentication &amp; Auto-Refresh</h3>
+
+<p>Financial institutional data must be secure. The client bridge (<code>mcp_client_bridge.py</code>) automatically handles LSEG OAuth2 client-credentials logic, securely caching and dynamically refreshing ephemeral JWT tokens in the background via the dynamic <code>header_provider</code>.</p>
+
+<h3 id="schema-adaptive-runtime-discovery">Schema-Adaptive Runtime Discovery</h3>
+
+<p>During initialization, the ADK automatically reads the structured JSON schemas exposed by the LSEG MCP discovery phase. It maps these schemas into standard function-calling tools for the LLM. This allows the Root Orchestrator to autonomously "discover" and execute any of the <strong>17 specialized LSEG tools</strong> available, ranging from options pricing and curves to fundamental databases:</p>
+
+<ul>
+<li><strong>Pricing &amp; Valuation</strong>: <code>fx_spot_price</code>, <code>fx_forward_price</code>, <code>bond_price</code>, <code>bond_future_price</code>, <code>option_value</code> (Greeks), <code>ir_swap</code>.</li>
+<li><strong>Curves &amp; Surfaces</strong>: <code>interest_rate_curve</code>, <code>credit_curve</code>, <code>inflation_curve</code>, <code>fx_vol_surface</code>, <code>equity_vol_surface</code>.</li>
+<li><strong>QA &amp; Fundamentals</strong>: <code>qa_company_fundamentals</code>, <code>qa_ibes_consensus</code>, <code>qa_macroeconomic</code>.</li>
+<li><strong>News &amp; Timeseries</strong>: <code>insight_headlines</code>, <code>tscc_interday_summaries</code>.</li>
+</ul>
+
+<hr />
+
+<h2 id="key-benefits-unique-features">💡 Key Benefits &amp; Unique Features</h2>
+
+<p>This collaborative multi-agent system introduces several unique behaviors that set it apart from standard single-turn LLM implementations:</p>
+
+<h3 id="proactive-visualization">📊 Proactive Visualization</h3>
+
+<p>Even if the user <strong>does not</strong> explicitly ask for a chart, the Root Orchestrator analyzes the quantitative data it retrieves (e.g., timeseries closing prices, or forward EPS estimates). If it determines that a visualization will make the report more impactful, it proactively calls the <code>graphing_agent</code> to plot the data before advancing the workflow.</p>
+
+<h3 id="audit-before-authoring-chain-of-custody">🛡️ Audit Before Authoring (Chain of Custody)</h3>
+
+<p>The Report Writer is physically barred from generating a report before a formal risk audit is completed. If numerical data is compiled, the Orchestrator routes execution through the <code>risk_critic_agent</code> first, ensuring that potential over-optimism and downside risks are formally integrated as a core section of the final report.</p>
+
+<h3 id="production-ready-deployment">⚡ Production-Ready Deployment</h3>
+
+<p>Because the agents are packaged using standard ADK <code>App</code> definitions, they are instantly deployable across three runtime modes:
+1.  <strong>CLI Mode</strong>: Execute targeted prompts straight from standard output.
+2.  <strong>ADK Web Interface</strong>: Launch a Gradio-based rich chat UI natively by running <code>adk web .</code>.
+3.  <strong>Vertex AI Agent Engine</strong>: Deploy the multi-agent application with a single command (<code>adk deploy agent_engine</code>) to Google Cloud as a fully managed, scalable Reasoning Engine.</p>
+
+<hr />
+
+<h2 id="enterprise-integration-connecting-via-agent-to-agent-a2a">🔗 Enterprise Integration: Connecting via Agent-to-Agent (A2A)</h2>
+
+<p>In modern enterprise architectures, data and AI capabilities should not exist in silos. While local multi-agent coordination (in-memory orchestration) is perfect for structured pipelines, institutional environments demand that these capabilities be exposed as reusable, secure network utilities.</p>
+
+<p>The <strong>Google ADK's Agent-to-Agent (A2A) protocol</strong> provides a standardized way for independent agents to communicate and collaborate across network, cloud, and organizational boundaries—even if they are written in different languages or managed by separate teams.</p>
+
+<p><img src="a2a_sequence.png" alt="A2A Interaction Flow" /></p>
+
+<h3 id="1-exposing-the-lseg-market-agent-to-the-ecosystem">1. Exposing the LSEG Market Agent to the Ecosystem</h3>
+
+<p>Exposing our LSEG agent as a remote service is remarkably simple. Using ADK's <code>to_a2a</code> utility, we can wrap the <code>root_agent</code> and spin up a Starlette web application served via <code>uvicorn</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">google.adk.a2a.utils.agent_to_a2a</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_a2a</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">lseg_market_agent.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">root_agent</span>
+
+<span class="c1"># Wrap the root agent into an A2A compliant web service</span>
+<span class="n">a2a_app</span> <span class="o">=</span> <span class="n">to_a2a</span><span class="p">(</span><span class="n">root_agent</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">8001</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>When you host this service (e.g., in a secure container on Google Cloud Run), it automatically publishes an <strong>Agent Card</strong> at the <code>/.well-known/agent.json</code> endpoint. The Agent Card is a formal, machine-readable contract that exposes the agent's capabilities, specialized skills, and tools to the rest of the corporate network.</p>
+
+<h3 id="2-consuming-the-lseg-agent-from-customer-ecosystems">2. Consuming the LSEG Agent from Customer Ecosystems</h3>
+
+<p>A customer's internal agent (for example, an Automated Underwriting Agent, a Portfolio Rebalancing Bot, or an M&amp;A Compliance Orchestrator) can now consume the LSEG Market Agent natively over the network. </p>
+
+<p>Using the ADK's <code>RemoteA2aAgent</code> proxy class, the customer's system treats our LSEG agent as if it were a local tool:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">google.adk.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">RemoteA2aAgent</span><span class="p">,</span> <span class="n">LlmAgent</span>
+
+<span class="c1"># 1. Bind to the LSEG Market Agent over the network via its Agent Card</span>
+<span class="n">lseg_remote_service</span> <span class="o">=</span> <span class="n">RemoteA2aAgent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lseg_market_intelligence&quot;</span><span class="p">,</span>
+    <span class="n">agent_card_url</span><span class="o">=</span><span class="s2">&quot;https://lseg-agent-service.internal/.well-known/agent.json&quot;</span>
+<span class="p">)</span>
+
+<span class="c1"># 2. Register it as a specialized sub-agent inside the customer&#39;s internal system</span>
+<span class="n">customer_portfolio_agent</span> <span class="o">=</span> <span class="n">LlmAgent</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;portfolio_orchestration_agent&quot;</span><span class="p">,</span>
+    <span class="n">instruction</span><span class="o">=</span><span class="s2">&quot;Evaluate holdings. For deep asset research, delegate to lseg_market_intelligence.&quot;</span><span class="p">,</span>
+    <span class="n">sub_agents</span><span class="o">=</span><span class="p">[</span><span class="n">lseg_remote_service</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="3-why-a2a-is-a-game-changer-for-customers">3. Why A2A is a Game-Changer for Customers</h3>
+
+<p>By integrating via A2A, the LSEG Market Agent becomes an active, real-time participant in the customer's broader data ecosystem:
+*   <strong>Zero-Trust Security &amp; Governance</strong>: Enforce Row-Level Security and Model Armor policies at the boundaries. The customer's agent only has access to the specific tools and capabilities defined in the LSEG Agent Card contract.
+*   <strong>Decoupled Architecture</strong>: The customer's team can build their core business logic in their preferred framework (even non-Python systems), while offloading complex quantitative valuations to the dedicated LSEG A2A microservice.
+*   <strong>Continuous Context Handoffs</strong>: A2A enables seamless exchange of rich, multi-modal context (such as feeding internal compliance logs directly into our agent, and receiving structured PDFs and charts back).</p>
+
+<hr />
+
+<h2 id="getting-started-in-minutes">🚀 Getting Started in Minutes</h2>
+
+<p>Anxious to see it in action? You can set up and run this market intelligence agent locally in just a few steps.</p>
+
+<h3 id="1-clone-and-install-dependencies">1. Clone and Install Dependencies</h3>
+
+<p>Ensure you have Python 3.12+ and virtual environment tools installed:</p>
+
+<div class="codehilite">
+<pre><span></span><code>python3.12<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate
+pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</code></pre>
+</div>
+
+<h3 id="2-authenticate-and-configure-environment">2. Authenticate and Configure Environment</h3>
+
+<p>Authenticate your local environment with Google Cloud to allow ADK access to Vertex AI:</p>
+
+<div class="codehilite">
+<pre><span></span><code>gcloud<span class="w"> </span>auth<span class="w"> </span>application-default<span class="w"> </span>login
+</code></pre>
+</div>
+
+<p>Copy <code>.env.example</code> to <code>.env</code> and fill in your GCP Project ID and LSEG MCP credentials:</p>
+
+<pre><code>GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+GOOGLE_GENAI_USE_VERTEXAI="true"
+LSEG_CLIENT_ID="GE-XX-XXXXXX"
+LSEG_CLIENT_SECRET="XXXXX-XXXX-XXXX-XXXXX"
+</code></pre>
+
+<h3 id="3-run-a-complex-market-intelligence-query">3. Run a Complex Market Intelligence Query</h3>
+
+<p>Execute the CLI runner with a high-level prompt:</p>
+
+<div class="codehilite">
+<pre><span></span><code>python3.12<span class="w"> </span>run.py<span class="w"> </span>--prompt<span class="w"> </span><span class="s2">&quot;Analyze Microsoft&#39;s recent fundamentals, check analyst consensus forward estimates, and graph its 3-year EPS growth. Output a PDF report.&quot;</span>
+</code></pre>
+</div>
+
+<p>This single command initiates the multi-agent cascade, pulling data from LSEG, writing Python code in a sandbox to output EPS plots, routing through the Risk Critic for over-optimism analysis, generating an institutional Markdown report, and compiling a downloadable PDF artifact (<code>financial_report.pdf</code>).</p>
+
+<hr />
+
+<h2 id="automated-quality-assurance-adk-evals">🧪 Automated Quality Assurance: ADK Evals</h2>
+
+<p>To ensure the system's routing and tool usage remain robust as prompts change, the project is equipped with automated evaluations powered by the Google ADK's <code>AgentEvaluator</code>.</p>
+
+<p>Test cases defined in <code>evals/*.test.json</code> specify the expected tools the agent must invoke for various prompts. You can run the evaluation suite instantly with:</p>
+
+<div class="codehilite">
+<pre><span></span><code>python3.12<span class="w"> </span>run_evals.py
+</code></pre>
+</div>
+
+<p>Or using the ADK CLI:</p>
+
+<div class="codehilite">
+<pre><span></span><code>adk<span class="w"> </span><span class="nb">eval</span><span class="w"> </span>lseg_market_agent<span class="w"> </span>evals/*.test.json
+</code></pre>
+</div>
+
+<p>This ensures continuous validation of your multi-agent orchestration pipeline, verifying that the orchestrator calls <code>qa_company_fundamentals</code> or <code>insight_headlines</code> correctly for every given query.</p>
+
+<hr />
+
+<h2 id="conclusion">🔮 Conclusion</h2>
+
+<p>The LSEG &amp; Google ADK Market Intelligence Agent represents a significant leap forward in how financial professionals interact with data. By wrapping specialized LSEG quantitative tools in an intelligent, collaborative multi-agent pipeline, we eliminate manual context switching, secure rigorous risk auditing, and automate visual publication. </p>
+
+<p>Whether you run it locally via CLI, interact via the Gradio web UI, or scale it as a managed Vertex AI Reasoning Engine, this system demonstrates how AI can become a deeply valuable, secure, and highly capable partner in institutional finance.</p>
+
+<p><em>Explore the codebase, run the eval suite, and start generating your own automated financial theses today!</em></p>
+
+    </div>
+</body>
+</html>

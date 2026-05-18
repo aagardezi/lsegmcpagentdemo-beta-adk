@@ -12,24 +12,7 @@ Today, we are introducing the **Cross-Asset Market Intelligence & Valuation Agen
 
 At the heart of this project is a **collaborative multi-agent framework** managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of five specialized agents, each with a distinct role, clear operational constraints, and a strict **Chain of Custody**.
 
-```mermaid
-graph TD
-    User([User Prompt]) --> Orchestrator[Root Orchestrator]
-    Orchestrator -->|1. Search & Fetch| LSEG[LSEG MCP Server]
-    LSEG -->|2. Data Return| Orchestrator
-    Orchestrator -->|3. Delegate| Graphing[Graphing Sub-Agent]
-    Orchestrator -->|3. Or Bypass if no data fit| RiskCritique[Risk Auditor Sub-Agent]
-    Graphing -->|4. Plot Data & Transfer| RiskCritique
-    RiskCritique -->|5. Audit & Transfer| Report[Report Writer Sub-Agent]
-    Report -->|6. Compile Report & Transfer| PDFGen[PDF Generator Sub-Agent]
-    PDFGen -->|7. Generate PDF| UserResponse([Final Response])
-    
-    style Orchestrator fill:#e1f5fe,stroke:#039be5,stroke-width:2px
-    style Graphing fill:#efebe9,stroke:#8d6e63,stroke-width:2px
-    style RiskCritique fill:#ffe0b2,stroke:#fb8c00,stroke-width:2px
-    style Report fill:#e8f5e9,stroke:#43a047,stroke-width:2px
-    style PDFGen fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
-```
+![Agent Pipeline Flowchart](pipeline_flowchart.png)
 
 Let's look at the specialized roles that form this elite team:
 
@@ -102,6 +85,57 @@ Because the agents are packaged using standard ADK `App` definitions, they are i
 1.  **CLI Mode**: Execute targeted prompts straight from standard output.
 2.  **ADK Web Interface**: Launch a Gradio-based rich chat UI natively by running `adk web .`.
 3.  **Vertex AI Agent Engine**: Deploy the multi-agent application with a single command (`adk deploy agent_engine`) to Google Cloud as a fully managed, scalable Reasoning Engine.
+
+---
+
+## 🔗 Enterprise Integration: Connecting via Agent-to-Agent (A2A)
+
+In modern enterprise architectures, data and AI capabilities should not exist in silos. While local multi-agent coordination (in-memory orchestration) is perfect for structured pipelines, institutional environments demand that these capabilities be exposed as reusable, secure network utilities.
+
+The **Google ADK's Agent-to-Agent (A2A) protocol** provides a standardized way for independent agents to communicate and collaborate across network, cloud, and organizational boundaries—even if they are written in different languages or managed by separate teams.
+
+![A2A Interaction Flow](a2a_sequence.png)
+
+### 1. Exposing the LSEG Market Agent to the Ecosystem
+Exposing our LSEG agent as a remote service is remarkably simple. Using ADK's `to_a2a` utility, we can wrap the `root_agent` and spin up a Starlette web application served via `uvicorn`:
+
+```python
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
+from lseg_market_agent.agent import root_agent
+
+# Wrap the root agent into an A2A compliant web service
+a2a_app = to_a2a(root_agent, port=8001)
+```
+
+When you host this service (e.g., in a secure container on Google Cloud Run), it automatically publishes an **Agent Card** at the `/.well-known/agent.json` endpoint. The Agent Card is a formal, machine-readable contract that exposes the agent's capabilities, specialized skills, and tools to the rest of the corporate network.
+
+### 2. Consuming the LSEG Agent from Customer Ecosystems
+A customer's internal agent (for example, an Automated Underwriting Agent, a Portfolio Rebalancing Bot, or an M&A Compliance Orchestrator) can now consume the LSEG Market Agent natively over the network. 
+
+Using the ADK's `RemoteA2aAgent` proxy class, the customer's system treats our LSEG agent as if it were a local tool:
+
+```python
+from google.adk.agents import RemoteA2aAgent, LlmAgent
+
+# 1. Bind to the LSEG Market Agent over the network via its Agent Card
+lseg_remote_service = RemoteA2aAgent(
+    name="lseg_market_intelligence",
+    agent_card_url="https://lseg-agent-service.internal/.well-known/agent.json"
+)
+
+# 2. Register it as a specialized sub-agent inside the customer's internal system
+customer_portfolio_agent = LlmAgent(
+    name="portfolio_orchestration_agent",
+    instruction="Evaluate holdings. For deep asset research, delegate to lseg_market_intelligence.",
+    sub_agents=[lseg_remote_service]
+)
+```
+
+### 3. Why A2A is a Game-Changer for Customers
+By integrating via A2A, the LSEG Market Agent becomes an active, real-time participant in the customer's broader data ecosystem:
+*   **Zero-Trust Security & Governance**: Enforce Row-Level Security and Model Armor policies at the boundaries. The customer's agent only has access to the specific tools and capabilities defined in the LSEG Agent Card contract.
+*   **Decoupled Architecture**: The customer's team can build their core business logic in their preferred framework (even non-Python systems), while offloading complex quantitative valuations to the dedicated LSEG A2A microservice.
+*   **Continuous Context Handoffs**: A2A enables seamless exchange of rich, multi-modal context (such as feeding internal compliance logs directly into our agent, and receiving structured PDFs and charts back).
 
 ---
 
