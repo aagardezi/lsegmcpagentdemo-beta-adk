@@ -46,11 +46,10 @@ A key technical highlight of this demonstration is its integration mechanism. Ra
 ```python
 # Natively creating the authenticated MCP connection using ADK
 def create_lseg_mcp_toolset() -> MCPToolset:
-    token = get_lseg_token()
     return MCPToolset(
         connection_params=StreamableHTTPConnectionParams(
             url="https://api.analytics.lseg.com/lfa/mcp",
-            headers={"Authorization": f"Bearer {token}"},
+            headers={},
             timeout=180.0
         ),
         header_provider=lseg_header_provider
@@ -61,12 +60,13 @@ def create_lseg_mcp_toolset() -> MCPToolset:
 Financial institutional data must be secure. The client bridge (`mcp_client_bridge.py`) automatically handles LSEG OAuth2 client-credentials logic, securely caching and dynamically refreshing ephemeral JWT tokens in the background via the dynamic `header_provider`.
 
 ### Schema-Adaptive Runtime Discovery
-During initialization, the ADK automatically reads the structured JSON schemas exposed by the LSEG MCP discovery phase. It maps these schemas into standard function-calling tools for the LLM. This allows the Root Orchestrator to autonomously "discover" and execute any of the **17 specialized LSEG tools** available, ranging from options pricing and curves to fundamental databases:
+During initialization, the ADK automatically reads the structured JSON schemas exposed by the LSEG MCP discovery phase. It maps these schemas into standard function-calling tools for the LLM. This allows the Root Orchestrator to autonomously "discover" and execute any of the **37 specialized LSEG tools** available, ranging from options pricing and curves to fundamental databases:
 
-- **Pricing & Valuation**: `fx_spot_price`, `fx_forward_price`, `bond_price`, `bond_future_price`, `option_value` (Greeks), `ir_swap`.
-- **Curves & Surfaces**: `interest_rate_curve`, `credit_curve`, `inflation_curve`, `fx_vol_surface`, `equity_vol_surface`.
-- **QA & Fundamentals**: `qa_company_fundamentals`, `qa_ibes_consensus`, `qa_macroeconomic`.
-- **News & Timeseries**: `insight_headlines`, `tscc_interday_summaries`.
+- **Equity Research**: `qa_company_fundamentals`, `qa_ibes_consensus`, `insight_headlines` / `important_company_news`, `historical_pricing_summaries`, `option_value`, `equity_vol_surface`.
+- **Fixed Income & Credit Audits**: `fixed_income_bond_reference`, `fixed_income_risk_analytics`, `interest_rate_curve`, `inflation_curve`, `credit_curve` / `bond_price`.
+- **FX & Currency Hedging**: `fx_spot_price`, `fx_forward_curve` / `fx_forward_price`, `fx_event_tracker`, `fx_vol_surface`.
+- **FTSE Index Benchmarking (IXM)**: `ixm_list_indexes`, `ixm_compare_index_return_time_series`, `ixm_index_risk_time_series`, `ixm_index_sector_risk`.
+- **Macroeconomic Analysis**: `qa_macroeconomic`.
 
 ---
 
@@ -83,8 +83,8 @@ The Report Writer is physically barred from generating a report before a formal 
 ### ⚡ Production-Ready Deployment
 Because the agents are packaged using standard ADK `App` definitions, they are instantly deployable across three runtime modes:
 1.  **CLI Mode**: Execute targeted prompts straight from standard output.
-2.  **ADK Web Interface**: Launch a Gradio-based rich chat UI natively by running `adk web .`.
-3.  **Vertex AI Agent Engine**: Deploy the multi-agent application with a single command (`adk deploy agent_engine`) to Google Cloud as a fully managed, scalable Reasoning Engine.
+2.  **Local Web Playground**: Launch the local web playground interface by running `agents-cli playground`.
+3.  **Vertex AI Agent Engine**: Deploy the multi-agent application with a single command (`agents-cli deploy`) to Google Cloud as a fully managed, scalable Reasoning Engine.
 
 ---
 
@@ -146,7 +146,7 @@ Anxious to see it in action? You can set up and run this market intelligence age
 ### 1. Clone and Install Dependencies
 Ensure you have Python 3.12+ and virtual environment tools installed:
 ```bash
-python3.12 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -167,7 +167,7 @@ LSEG_CLIENT_SECRET="XXXXX-XXXX-XXXX-XXXXX"
 ### 3. Run a Complex Market Intelligence Query
 Execute the CLI runner with a high-level prompt:
 ```bash
-python3.12 run.py --prompt "Analyze Microsoft's recent fundamentals, check analyst consensus forward estimates, and graph its 3-year EPS growth. Output a PDF report."
+python3 run.py --prompt "Analyze Microsoft's recent fundamentals, check analyst consensus forward estimates, and graph its 3-year EPS growth. Output a PDF report."
 ```
 
 This single command initiates the multi-agent cascade, pulling data from LSEG, writing Python code in a sandbox to output EPS plots, routing through the Risk Critic for over-optimism analysis, generating an institutional Markdown report, and compiling a downloadable PDF artifact (`financial_report.pdf`).
@@ -176,16 +176,12 @@ This single command initiates the multi-agent cascade, pulling data from LSEG, w
 
 ## 🧪 Automated Quality Assurance: ADK Evals
 
-To ensure the system's routing and tool usage remain robust as prompts change, the project is equipped with automated evaluations powered by the Google ADK's `AgentEvaluator`.
+To ensure the system's routing and tool usage remain robust as prompts change, the project is equipped with automated evaluations powered by the `agents-cli` eval platform.
 
-Test cases defined in `evals/*.test.json` specify the expected tools the agent must invoke for various prompts. You can run the evaluation suite instantly with:
+Test cases are defined under `tests/eval/datasets/` and consolidated in `tests/eval/eval_config.yaml`. You can run the evaluation suite instantly with:
 
 ```bash
-python3.12 run_evals.py
-```
-Or using the ADK CLI:
-```bash
-adk eval lseg_market_agent evals/*.test.json
+agents-cli eval run --dataset tests/eval/datasets/lseg_market_evals.json --project YOUR_PROJECT_ID
 ```
 
 This ensures continuous validation of your multi-agent orchestration pipeline, verifying that the orchestrator calls `qa_company_fundamentals` or `insight_headlines` correctly for every given query.

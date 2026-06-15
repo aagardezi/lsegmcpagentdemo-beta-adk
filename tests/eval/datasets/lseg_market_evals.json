@@ -1,0 +1,79 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "msft_fundamentals",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "What was Microsoft's (MSFT.O) Gross Income and EPS for 2022 and 2023?"
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_company_fundamentals",
+        "qa_ibes_consensus",
+        "important_company_news"
+      ]
+    },
+    {
+      "eval_case_id": "us_macro_gdp",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Show me the latest US GDP and Unemployment figures."
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_macroeconomic"
+      ]
+    },
+    {
+      "eval_case_id": "tsla_sentiment",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Get me the latest insight headlines specifically mentioning Tesla (TSLA.O)."
+          }
+        ]
+      },
+      "expected_tools": [
+        "important_company_news"
+      ]
+    },
+    {
+      "eval_case_id": "aapl_complete_summary",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Analyze Apple's (AAPL.O) recent financial fundamentals, check the latest news sentiment around it, and fetch analyst consensus estimates."
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_company_fundamentals",
+        "important_company_news",
+        "qa_ibes_consensus"
+      ]
+    },
+    {
+      "eval_case_id": "amzn_eps_chart",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Fetch the historical EPS and Revenue for Amazon over the last 3 years. Draw a grouped bar chart of the EPS vs Revenue data."
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_company_fundamentals",
+        "qa_ibes_consensus"
+      ]
+    }
+  ]
+}

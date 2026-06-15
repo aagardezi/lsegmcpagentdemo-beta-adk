@@ -47,32 +47,37 @@ graph TD
 
 ## 🛠️ LSEG MCP Tools Available
 
-The agent has access to **17 specialized financial tools** served by the LSEG MCP server. It decides autonomously which tools to combine based on the user's prompt:
+The agent has access to the complete suite of **37 specialized financial tools** served by the LSEG MCP server. It decides autonomously which tools to combine based on the user's prompt:
 
-### Pricing & Valuation Tools
-*   `fx_spot_price`: Calculates FX spot pricing, valuation, and analytics (e.g., EUR/USD).
-*   `fx_forward_price`: Calculates FX forward pricing and analytics.
-*   `bond_price`: Prices corporate and sovereign bonds via identifiers (ISIN, CUSIP, RIC).
-*   `bond_future_price`: Prices bond futures via instrument code.
-*   `option_value`: Values vanilla, exotic barrier, and binary options with Greeks (Delta, Gamma, Vega).
-*   `ir_swap`: Prices Interest Rate Swaps based on customizable reference templates.
-
-### Market Data Curves & Surfaces
-*   `interest_rate_curve`: Fetches available IR curves and calculates curve points.
-*   `credit_curve`: Generates and retrieves corporate and sovereign credit curves.
-*   `inflation_curve`: Searches and calculates inflation curves by country.
-*   `fx_forward_curve`: Calculates FX Forward curves.
-*   `fx_vol_surface`: Generates FX Volatility surfaces.
+### 1. Equity Research Tools
+*   `qa_company_fundamentals`: Retrieves deep historical financials (Net Sales, Gross Income, EPS, DPS, P/E Ratio).
+*   `qa_ibes_consensus`: Provides forward-looking IBES Analyst Consensus metrics (EPS, Revenue, Dividends forecasts).
+*   `insight_headlines` / `important_company_news`: Ingests and aggregates the latest news and sentiment for specific companies or topics.
+*   `historical_pricing_summaries`: Consolidates multi-frequency historical pricing summaries (time series data).
+*   `option_value`: Values vanilla, exotic barrier, and binary options with Greeks (Delta, Gamma, Vega, Theta, Rho).
 *   `equity_vol_surface`: Generates Equity Volatility surfaces.
 
-### Quantitative Analytics (QA) & Fundamentals
-*   `qa_company_fundamentals`: Retrieves deep historical financials (Net Sales, Gross Income, EPS, DPS, P/E Ratio).
-*   `qa_ibes_consensus`: Provides forward-looking IBES Analyst Consensus metrics.
-*   `qa_macroeconomic`: Global economic indicator database (GDP, CPI, Unemployment, Non-Farm Payrolls).
+### 2. Fixed Income & Credit Auditing Tools
+*   `fixed_income_bond_reference`: Fetches issuer and bond reference metadata.
+*   `fixed_income_risk_analytics`: Computes duration, convexity, and option-adjusted spread (OAS) risk analytics.
+*   `interest_rate_curve`: Fetches available IR curves and calculates curve points.
+*   `inflation_curve`: Searches and calculates inflation curves by country.
+*   `credit_curve` / `bond_price`: Generates and retrieves credit curves and prices corporate/sovereign bonds.
 
-### News & Time Series
-*   `insight_headlines`: Ingests and aggregates the latest news and sentiment for specific companies (RICs) or topics.
-*   `tscc_interday_summaries`: Consolidates multi-frequency interday pricing summaries (time series data).
+### 3. FX & Currency Hedging Tools
+*   `fx_spot_price`: Calculates FX spot pricing and analytics.
+*   `fx_forward_price` / `fx_forward_curve`: Calculates FX forward pricing, swap points, and forward curves.
+*   `fx_event_tracker`: Tracks historical event volatility around macroeconomic event dates.
+*   `fx_vol_surface`: Generates FX Volatility surfaces.
+
+### 4. FTSE Index Benchmarking (IXM) Tools
+*   `ixm_list_indexes`: Index listing and discovery to find index benchmarks.
+*   `ixm_compare_index_return_time_series`: Compares return profiles across multiple indices over time.
+*   `ixm_index_risk_time_series`: Analyzes index risk timeseries (volatility, tracking error).
+*   `ixm_index_sector_risk`: Returns index sector risk breakdowns.
+
+### 5. Macroeconomic Analysis
+*   `qa_macroeconomic`: Global economic indicator database (GDP, CPI, Unemployment, Non-Farm Payrolls).
 
 ---
 
@@ -118,28 +123,28 @@ LSEG_CLIENT_SECRET="XXXXX-XXXX-XXXX-XXXXX"
 
 ### Running the Agent
 
-You can interact with the agent natively via the built-in CLI Runner, or spin it up locally in a browser using the `adk web` utility.
+You can interact with the agent natively via the built-in CLI Runner, or spin it up locally in a browser using the `agents-cli playground` utility.
 
 #### Method 1: CLI Runner
 Execute the runner directly from standard out using a prompt override:
 ```bash
-python3.12 run.py --prompt "Compare Apple's latest fundamentals with recent news sentiment."
+python3 run.py --prompt "Compare Apple's latest fundamentals with recent news sentiment."
 ```
 
-#### Method 2: ADK Web Interface
-Because the application is structured with a root package `lseg_market_agent`, you can spin up the full ADK Gradio UI natively to chat interactively with the agent:
+#### Method 2: Local Web Playground
+Because the application is structured with a root package `lseg_market_agent`, you can spin up the full web playground interface to chat interactively with the agent:
 ```bash
-adk web .
+agents-cli playground
 ```
 
-#### Method 3: Deploy to Vertex AI Agent Engine
-You can deploy this agent to Google Cloud's Vertex AI Agent Engine using the standalone ADK CLI. This will package the agent and deploy it to your GCP project as a managed service. *(Ensure you have run `gcloud auth application-default login` and have the Vertex AI API enabled for your project)*:
+#### Method 3: Deploy to Vertex AI Agent Engine (Agent Runtime)
+You can deploy this agent to Google Cloud's Agent Runtime using the standalone `agents-cli` tool. This will package the agent and deploy it to your GCP project as a managed service:
 ```bash
-adk deploy agent_engine --project="YOUR_PROJECT_ID" --region="us-central1" --display_name="LSEG Market Agent" lseg_market_agent
+agents-cli deploy --project="YOUR_PROJECT_ID" --region="us-central1"
 ```
-Once deployed, you can run and interact with the remote agent directly via Google Cloud or by using the ADK runtime. To run it from the CLI, obtain your Reasoning Engine ID from the deployment output and run:
+Once deployed, you can run and interact with the remote agent directly via the CLI:
 ```bash
-adk run lseg_market_agent --session_service_uri "agentengine://<YOUR_REASONING_ENGINE_ID>"
+agents-cli run "Compare Apple's latest fundamentals with recent news sentiment."
 ```
 
 ---
@@ -179,52 +184,39 @@ The orchestrator can delegate specialized tasks—such as dynamically generating
 
 ## 📊 Automated Evaluations (ADK Evals)
 
-The project includes an automated evaluation suite powered by the Google ADK's `AgentEvaluator`. This allows you to verify that the agent is calling the correct tools for specific user prompts without manual interaction.
+The project includes an automated evaluation suite powered by the Google ADK's `agents-cli eval`. This allows you to verify that the agent is calling the correct tools and succeeding in multi-turn tasks.
 
 ### 🔍 What is There?
-The `evals/` directory contains JSON-based test cases (e.g., `lseg_market_evals.test.json`, `case_1_msft.test.json`). These files define:
-- **`user_content`**: The prompt sent to the agent.
-- **`intermediate_data.tool_uses`**: The expected tool calls (by name) that the agent must make to successfully resolve the prompt.
+Evaluation datasets and configurations are stored in the `tests/eval/` directory:
+- **`tests/eval/eval_config.yaml`**: Configures the evaluation metrics to run (`multi_turn_task_success`, `multi_turn_tool_use_quality`, and a custom code-based metric `tool_use_subset_match`).
+- **`tests/eval/datasets/`**: Contains the JSON-based test cases (e.g., `lseg_market_evals.json`, `case_1_msft.json`, `case_2_gdp.json`). Each test case defines:
+  - **`prompt`**: The starting user query.
+  - **`expected_tools`**: The list of tools the agent must call to resolve the query.
 
 ### ⚙️ How It Works
-The evaluation system uses the `AgentEvaluator.evaluate` method from the Google ADK. It:
-1. Spins up the `lseg_market_agent`.
-2. Passes the user prompt from the JSON file to the agent.
-3. Captures the agent's tool calls and compares them against the expected `tool_uses` defined in the JSON.
-4. Reports success (`✅ PASSED`) or failure (`❌ FAILED`) based on whether the expected tools were invoked.
+The evaluation system:
+1. Runs the agent locally.
+2. Executes the user prompts in the dataset.
+3. Grades the agent's actual trajectories and tool calls against the metrics defined in `eval_config.yaml`.
+4. Outputs detailed metrics scores.
 
-### 🏃 How to Use It
-
-There are two ways to run the evaluations: using the provided Python script or via the ADK CLI.
-
-#### Method 1: Using the Python Script
-This is the easiest way to run all test cases sequentially:
-
+### 🏃 How to Run Evals
+To execute the evaluation suite, run:
 ```bash
-python3.12 run_evals.py
+agents-cli eval run
 ```
 
-#### Method 2: Using the ADK CLI
-If you have the `adk` CLI installed in your environment, you can use the `adk eval` command to run evaluations directly for the `lseg_market_agent` module:
-
+Or target a specific dataset file:
 ```bash
-adk eval lseg_market_agent evals/case_1_msft.test.json
+agents-cli eval run --dataset tests/eval/datasets/case_1_msft.json
 ```
 
-Or run all evaluations by passing multiple files:
-```bash
-adk eval lseg_market_agent evals/*.test.json
-```
-
-You should see output similar to:
+Output results will look similar to:
 ```text
-Starting evaluations for 'lseg_market_agent'...
-Found 3 test files.
+Evaluation Run Summary:
+Metrics to run: ['multi_turn_task_success', 'multi_turn_tool_use_quality', 'tool_use_subset_match']
 
---- Running evaluation with dataset: evals/case_1_msft.test.json ---
-✅ PASSED evals/case_1_msft.test.json
-
---- Running evaluation with dataset: evals/case_2_gdp.test.json ---
-✅ PASSED evals/case_2_gdp.test.json
+Running evaluations on tests/eval/datasets/case_1_msft.json...
+  - Case #1: Success (1.0), Tool Quality (1.0), Tool Subset Match (1.0)
 ...
 ```

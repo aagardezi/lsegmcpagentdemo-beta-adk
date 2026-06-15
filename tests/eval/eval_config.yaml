@@ -1,0 +1,24 @@
+metrics_to_run:
+  - multi_turn_task_success
+  - multi_turn_tool_use_quality
+  - tool_use_subset_match
+
+custom_metrics:
+  - name: tool_use_subset_match
+    custom_function: |
+      def evaluate(instance):
+          expected = instance.get("expected_tools") or []
+          if not expected:
+              return {"score": 1.0}
+          actual = set()
+          turns = (instance.get("agent_data") or {}).get("turns", [])
+          for turn in turns:
+              for event in turn.get("events") or []:
+                  content = event.get("content") or {}
+                  for part in content.get("parts") or []:
+                      if isinstance(part, dict) and "function_call" in part:
+                          name = part["function_call"].get("name")
+                          if name:
+                              actual.add(name)
+          is_subset = all(t in actual for t in expected)
+          return {"score": 1.0 if is_subset else 0.0}

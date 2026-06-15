@@ -18,6 +18,7 @@ from typing import Any
 import vertexai
 from dotenv import load_dotenv
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
+from google.adk.sessions import InMemorySessionService
 from google.cloud import logging as google_cloud_logging
 from vertexai.agent_engines.templates.adk import AdkApp
 
@@ -35,6 +36,11 @@ class AgentEngineApp(AdkApp):
         vertexai.init()
         setup_telemetry()
         super().set_up()
+        # Set auto_create_session to True on the runners to prevent SessionNotFoundError
+        if "runner" in self._tmpl_attrs:
+            self._tmpl_attrs["runner"].auto_create_session = True
+        if "in_memory_runner" in self._tmpl_attrs:
+            self._tmpl_attrs["in_memory_runner"].auto_create_session = True
         logging.basicConfig(level=logging.INFO)
         logging_client = google_cloud_logging.Client()
         self.logger = logging_client.logger(__name__)
@@ -57,6 +63,7 @@ gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
 agent_runtime = AgentEngineApp(
     app=adk_app,
+    session_service_builder=InMemorySessionService,
     artifact_service_builder=lambda: (
         GcsArtifactService(bucket_name=logs_bucket_name)
         if logs_bucket_name

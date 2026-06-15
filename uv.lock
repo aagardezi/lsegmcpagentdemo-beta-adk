@@ -84,20 +84,6 @@ wheels = [
 ]
 
 [[package]]
-name = "alembic"
-version = "1.18.4"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "mako" },
-    { name = "sqlalchemy" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/alembic/alembic-1.18.4.tar.gz", hash = "sha256:cb6e1fd84b6174ab8dbb2329f86d631ba9559dd78df550b57804d607672cedbc" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/alembic/alembic-1.18.4-py3-none-any.whl", hash = "sha256:a5ed4adcf6d8a4cb575f3d759f071b03cd6e5c7618eb796cb52497be25bfe19a" },
-]
-
-[[package]]
 name = "annotated-doc"
 version = "0.0.4"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
@@ -480,47 +466,26 @@ wheels = [
 
 [[package]]
 name = "google-adk"
-version = "1.35.0"
+version = "2.2.0"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
 dependencies = [
     { name = "aiosqlite" },
-    { name = "anyio" },
     { name = "authlib" },
     { name = "click" },
     { name = "fastapi" },
-    { name = "google-api-python-client" },
     { name = "google-auth", extra = ["pyopenssl"] },
-    { name = "google-cloud-aiplatform", extra = ["agent-engines"] },
-    { name = "google-cloud-bigquery" },
-    { name = "google-cloud-bigquery-storage" },
-    { name = "google-cloud-bigtable" },
-    { name = "google-cloud-dataplex" },
-    { name = "google-cloud-discoveryengine" },
-    { name = "google-cloud-pubsub" },
-    { name = "google-cloud-secret-manager" },
-    { name = "google-cloud-spanner" },
-    { name = "google-cloud-speech" },
-    { name = "google-cloud-storage" },
     { name = "google-genai" },
     { name = "graphviz" },
     { name = "httpx" },
     { name = "jsonschema" },
-    { name = "mcp" },
     { name = "opentelemetry-api" },
-    { name = "opentelemetry-exporter-gcp-logging" },
-    { name = "opentelemetry-exporter-gcp-monitoring" },
-    { name = "opentelemetry-exporter-gcp-trace" },
-    { name = "opentelemetry-exporter-otlp-proto-http" },
-    { name = "opentelemetry-resourcedetector-gcp" },
     { name = "opentelemetry-sdk" },
-    { name = "pyarrow" },
+    { name = "packaging" },
     { name = "pydantic" },
-    { name = "python-dateutil" },
     { name = "python-dotenv" },
+    { name = "python-multipart" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "sqlalchemy" },
-    { name = "sqlalchemy-spanner" },
     { name = "starlette" },
     { name = "tenacity" },
     { name = "typing-extensions" },
@@ -529,9 +494,9 @@ dependencies = [
     { name = "watchdog" },
     { name = "websockets" },
 ]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-adk/google_adk-1.35.0.tar.gz", hash = "sha256:c3f36447d29c1a3400ba45b344f232d857db9b18d1224517a00b267da1f51dff" }
+sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-adk/google_adk-2.2.0.tar.gz", hash = "sha256:04cb6318aba8829fe7c941ee1b456ccb4745253898c13595708c9eb07b4582ff" }
 wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-adk/google_adk-1.35.0-py3-none-any.whl", hash = "sha256:f4c10f86c37e4fba157868d6884d4493bbb88a53fea00004d900dc03a3347f85" },
+    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-adk/google_adk-2.2.0-py3-none-any.whl", hash = "sha256:ebdf3d931dc2b9c5b30d995358fc2ae99d59594c48a4aaf7496869ccd2c5f245" },
 ]
 
 [package.optional-dependencies]
@@ -542,6 +507,27 @@ eval = [
     { name = "pandas" },
     { name = "rouge-score" },
     { name = "tabulate" },
+]
+gcp = [
+    { name = "google-cloud-aiplatform", extra = ["agent-engines"] },
+    { name = "google-cloud-bigquery" },
+    { name = "google-cloud-bigquery-storage" },
+    { name = "google-cloud-bigtable" },
+    { name = "google-cloud-dataplex" },
+    { name = "google-cloud-discoveryengine" },
+    { name = "google-cloud-pubsub" },
+    { name = "google-cloud-resource-manager" },
+    { name = "google-cloud-secret-manager" },
+    { name = "google-cloud-spanner" },
+    { name = "google-cloud-speech" },
+    { name = "google-cloud-storage" },
+    { name = "opentelemetry-exporter-gcp-logging" },
+    { name = "opentelemetry-exporter-gcp-monitoring" },
+    { name = "opentelemetry-exporter-gcp-trace" },
+    { name = "opentelemetry-exporter-otlp-proto-http" },
+    { name = "opentelemetry-resourcedetector-gcp" },
+    { name = "pyarrow" },
+    { name = "python-dateutil" },
 ]
 
 [[package]]
@@ -567,22 +553,6 @@ grpc = [
 ]
 
 [[package]]
-name = "google-api-python-client"
-version = "2.197.0"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "google-api-core" },
-    { name = "google-auth" },
-    { name = "google-auth-httplib2" },
-    { name = "httplib2" },
-    { name = "uritemplate" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-api-python-client/google_api_python_client-2.197.0.tar.gz", hash = "sha256:32e03977eda4a66eafc6ae58dc9ec46426b6025636d5ef019c5703013eddd4e5" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-api-python-client/google_api_python_client-2.197.0-py3-none-any.whl", hash = "sha256:0f8b89aa75768161dd4f5092d6bcb386c13236b32e0d9a938c02f71342094d14" },
-]
-
-[[package]]
 name = "google-auth"
 version = "2.53.0"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
@@ -601,19 +571,6 @@ pyopenssl = [
 ]
 requests = [
     { name = "requests" },
-]
-
-[[package]]
-name = "google-auth-httplib2"
-version = "0.4.0"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "google-auth" },
-    { name = "httplib2" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-auth-httplib2/google_auth_httplib2-0.4.0.tar.gz", hash = "sha256:d5b030a204b7a4b4d553ba9ca701b62481ee2b74419325580be70f7d85ffed35" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-auth-httplib2/google_auth_httplib2-0.4.0-py3-none-any.whl", hash = "sha256:8e55cfafa3358cba85f6cad4a886138e88e158d71e7e5c9ee5936a5c1507fb91" },
 ]
 
 [[package]]
@@ -1022,7 +979,7 @@ wheels = [
 
 [[package]]
 name = "google-genai"
-version = "1.75.0"
+version = "2.8.0"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
 dependencies = [
     { name = "anyio" },
@@ -1036,9 +993,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "websockets" },
 ]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-genai/google_genai-1.75.0.tar.gz", hash = "sha256:56bac3991b311c93f980c0a2abcd287b672146905df1fbd71c92ed633d5a07cf" }
+sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-genai/google_genai-2.8.0.tar.gz", hash = "sha256:37a9b3cb127d763e7f4ca47452ae3562c87728773bd1b149f7b559c239da2bc1" }
 wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-genai/google_genai-1.75.0-py3-none-any.whl", hash = "sha256:8dc4c096e7d6288c3087f6893f582fe52468932464781edb8193bd92b9fefb2c" },
+    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/google-genai/google_genai-2.8.0-py3-none-any.whl", hash = "sha256:4da0a223a100f4b37f609a68b835e3326ab0fa313314dc0fd9d34e76ee293844" },
 ]
 
 [[package]]
@@ -1077,22 +1034,6 @@ source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-sta
 sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/graphviz/graphviz-0.21.tar.gz", hash = "sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78" }
 wheels = [
     { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/graphviz/graphviz-0.21-py3-none-any.whl", hash = "sha256:54f33de9f4f911d7e84e4191749cac8cc5653f815b06738c54db9a15ab8b1e42" },
-]
-
-[[package]]
-name = "greenlet"
-version = "3.5.1"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1.tar.gz", hash = "sha256:5a56aeb7d5d9cc4b3a735efb5095bd4b4f6f0e4f93e5ca876d0e2315137b7829" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-macosx_11_0_universal2.whl", hash = "sha256:73f78f9b9f0a5c06e5c946ba1e8e36f5114923b6be109ee618c54f079c3ea14f" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:a0cbed8bb44e23c5b199f888f4e4ce096b45ad9f25ff74a7ad0213875e936bb2" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-manylinux_2_24_ppc64le.manylinux_2_28_ppc64le.whl", hash = "sha256:a203a8bd0acb0701653d3bbb26e404854a68674139ed5cbb778830f42b09bb33" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8a271fcd66c74615cda6a964fda3f304267a12e50a084472218a39bb0376f563" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:ded7b068c7c31c1a8657d4fd42d886b3e051ae29f88b80c5ff9d502257b0f071" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:d0932b81d72f552ded9d810d00021b64d89f2195a91ce115b893f943b7a4ab3c" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-win_amd64.whl", hash = "sha256:88e300d136eac057b2397aa1cfd7328b4c87c7eb66a09c7bc6a1292234db474e" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/greenlet/greenlet-3.5.1-cp311-cp311-win_arm64.whl", hash = "sha256:cc6ab7e555c8a112ad3a76e368e86e12a2754bcae1652a5602e133ec7b635523" },
 ]
 
 [[package]]
@@ -1192,18 +1133,6 @@ dependencies = [
 sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/httpcore/httpcore-1.0.9.tar.gz", hash = "sha256:6e34463af53fd2ab5d807f399a9b45ea31c3dfa2276f15a2c3f00afff6e176e8" }
 wheels = [
     { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/httpcore/httpcore-1.0.9-py3-none-any.whl", hash = "sha256:2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55" },
-]
-
-[[package]]
-name = "httplib2"
-version = "0.31.2"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "pyparsing" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/httplib2/httplib2-0.31.2.tar.gz", hash = "sha256:385e0869d7397484f4eab426197a4c020b606edd43372492337c0b4010ae5d24" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/httplib2/httplib2-0.31.2-py3-none-any.whl", hash = "sha256:dbf0c2fa3862acf3c55c078ea9c0bc4481d7dc5117cae71be9514912cf9f8349" },
 ]
 
 [[package]]
@@ -1398,7 +1327,7 @@ dependencies = [
     { name = "beautifulsoup4" },
     { name = "fpdf2" },
     { name = "gcsfs" },
-    { name = "google-adk" },
+    { name = "google-adk", extra = ["gcp"] },
     { name = "google-cloud-aiplatform", extra = ["agent-engines", "evaluation"] },
     { name = "google-cloud-logging" },
     { name = "google-genai" },
@@ -1434,9 +1363,9 @@ requires-dist = [
     { name = "codespell", marker = "extra == 'lint'", specifier = ">=2.2.0,<3.0.0" },
     { name = "fpdf2" },
     { name = "gcsfs", specifier = ">=2024.11.0" },
-    { name = "google-adk", specifier = ">=1.15.0,<2.0.0" },
-    { name = "google-adk", extras = ["eval"], marker = "extra == 'eval'", specifier = ">=1.15.0,<2.0.0" },
-    { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = ">=1.130.0" },
+    { name = "google-adk", extras = ["eval"], marker = "extra == 'eval'", specifier = ">=2.0.0,<3.0.0" },
+    { name = "google-adk", extras = ["gcp"], specifier = ">=2.0.0,<3.0.0" },
+    { name = "google-cloud-aiplatform", extras = ["agent-engines", "evaluation"], specifier = ">=1.156.0" },
     { name = "google-cloud-logging", specifier = ">=3.12.0,<4.0.0" },
     { name = "google-genai" },
     { name = "markdown2" },
@@ -1456,18 +1385,6 @@ dev = [
     { name = "nest-asyncio", specifier = ">=1.6.0,<2.0.0" },
     { name = "pytest", specifier = ">=8.3.4,<9.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.23.8,<1.0.0" },
-]
-
-[[package]]
-name = "mako"
-version = "1.3.12"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "markupsafe" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/mako/mako-1.3.12.tar.gz", hash = "sha256:9f778e93289bd410bb35daadeb4fc66d95a746f0b75777b942088b7fd7af550a" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/mako/mako-1.3.12-py3-none-any.whl", hash = "sha256:8f61569480282dbf557145ce441e4ba888be453c30989f879f0d652e39f53ea9" },
 ]
 
 [[package]]
@@ -2135,15 +2052,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyparsing"
-version = "3.3.2"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/pyparsing/pyparsing-3.3.2.tar.gz", hash = "sha256:c777f4d763f140633dcb6d8a3eda953bf7a214dc4eff598413c070bcdc117cbc" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/pyparsing/pyparsing-3.3.2-py3-none-any.whl", hash = "sha256:850ba148bd908d7e2411587e247a1e4f0327839c40e2e5e6d05a007ecc69911d" },
-]
-
-[[package]]
 name = "pytest"
 version = "8.4.2"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
@@ -2467,40 +2375,6 @@ wheels = [
 ]
 
 [[package]]
-name = "sqlalchemy"
-version = "2.0.50"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64'" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50.tar.gz", hash = "sha256:af5607d11ef90fd6a5c0549fe0045dce1663d427426bcfb506dcb5346a85a3b9" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:1aa6e403663a9c43c8fef7ce4bdb4cf48bcd8d352e91deda2a99f963270bd508" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:51b637a84f9fa35ae1f9017e786cb142974a25305085e1b378b3647a67f65ad3" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:2dab927761d9108550f0cf8e66ff21af56f907a0ce0a689793db615e2b55f62c" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-musllinux_1_2_aarch64.whl", hash = "sha256:545eae198d37bcf837a10ede3684e2af32458d6f35c597c35c2de7502dc38fc4" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-musllinux_1_2_x86_64.whl", hash = "sha256:0fec460e18cdbb4c7773531122ce9a27e96c6ca17af3933941d94da475ad2c86" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-win32.whl", hash = "sha256:e6e814658818fd165e749e3d8490ef16cc7f379a118c37ada8b0589ffbaaac22" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-cp311-cp311-win_amd64.whl", hash = "sha256:1c5f858fe79c9f5d8fda065c06186356acb7f8df3cd52dbd5ee3f200e4b144f5" },
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy/sqlalchemy-2.0.50-py3-none-any.whl", hash = "sha256:92064363517a3ff8212b5a93b8c62876579d8dfd1ca5b561335f30152d884fa9" },
-]
-
-[[package]]
-name = "sqlalchemy-spanner"
-version = "1.19.0"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-dependencies = [
-    { name = "alembic" },
-    { name = "google-cloud-spanner" },
-    { name = "sqlalchemy" },
-]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy-spanner/sqlalchemy_spanner-1.19.0.tar.gz", hash = "sha256:834cec66fb418e5085a44c68cee570c594c66dd8535b67dd5e8be3571d172136" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/sqlalchemy-spanner/sqlalchemy_spanner-1.19.0-py3-none-any.whl", hash = "sha256:3367a89388d9b7106111fc48c7fac441163602c414ad157f62e18b5705cc760e" },
-]
-
-[[package]]
 name = "sqlparse"
 version = "0.5.5"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
@@ -2524,15 +2398,15 @@ wheels = [
 
 [[package]]
 name = "starlette"
-version = "0.52.1"
+version = "1.3.1"
 source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
 dependencies = [
     { name = "anyio" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/starlette/starlette-0.52.1.tar.gz", hash = "sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933" }
+sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/starlette/starlette-1.3.1.tar.gz", hash = "sha256:05d0213193f2fbaae60e2ecb593b4add4262ad4e46536b54abe36f11a71724e0" }
 wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/starlette/starlette-0.52.1-py3-none-any.whl", hash = "sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74" },
+    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/starlette/starlette-1.3.1-py3-none-any.whl", hash = "sha256:c7372aae11c3c3f26a42df7bd626cec2f47d03483d261d369516a615a53714c6" },
 ]
 
 [[package]]
@@ -2700,15 +2574,6 @@ dependencies = [
 sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/tzlocal/tzlocal-5.3.1.tar.gz", hash = "sha256:cceffc7edecefea1f595541dbd6e990cb1ea3d19bf01b2809f362a03dd7921fd" }
 wheels = [
     { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/tzlocal/tzlocal-5.3.1-py3-none-any.whl", hash = "sha256:eb1a66c3ef5847adf7a834f1be0800581b683b5608e74f86ecbcef8ab91bb85d" },
-]
-
-[[package]]
-name = "uritemplate"
-version = "4.2.0"
-source = { registry = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/" }
-sdist = { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/uritemplate/uritemplate-4.2.0.tar.gz", hash = "sha256:480c2ed180878955863323eea31b0ede668795de182617fef9c6ca09e6ec9d0e" }
-wheels = [
-    { url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/uritemplate/uritemplate-4.2.0-py3-none-any.whl", hash = "sha256:962201ba1c4edcab02e60f9a0d3821e82dfc5d2d6662a21abd533879bdb8a686" },
 ]
 
 [[package]]

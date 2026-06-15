@@ -1,0 +1,20 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "msft_fundamentals",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "What was Microsoft's (MSFT.O) Gross Income for 2022?"
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_company_fundamentals",
+        "important_company_news",
+        "qa_ibes_consensus"
+      ]
+    }
+  ]
+}

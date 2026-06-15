@@ -209,12 +209,28 @@ __marimo__/
 
 !**/.adk/
 **/.adk/*
-!**/.adk/eval_history/
 .env
 
 read-only/
 
 GEMINI.md
+artifacts/
 
 # OS X
 .DS_Store
+
+# Local deployments and skills
+deployment_metadata.json
+.agents/
+
+# Terraform variables
+*.tfvars
+*.tfvars.json
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.crt
+*.der
+

@@ -6,11 +6,11 @@ authors = [
     {name = "Your Name", email = "your@email.com"},
 ]
 dependencies = [
-    "google-adk>=1.15.0,<2.0.0",
+    "google-adk[gcp]>=2.0.0,<3.0.0",
     "opentelemetry-instrumentation-google-genai>=0.1.0,<1.0.0",
     "gcsfs>=2024.11.0",
     "google-cloud-logging>=3.12.0,<4.0.0",
-    "google-cloud-aiplatform[evaluation,agent-engines]>=1.130.0",
+    "google-cloud-aiplatform[agent-engines,evaluation]>=1.156.0",
     "protobuf>=6.31.1,<7.0.0",
     "beautifulsoup4",
     "python-dotenv",
@@ -33,7 +33,7 @@ dev = [
 
 [project.optional-dependencies]
 eval = [
-    "google-adk[eval]>=1.15.0,<2.0.0",
+    "google-adk[eval]>=2.0.0,<3.0.0",
 ]
 lint = [
     "ruff>=0.4.6,<1.0.0",
@@ -94,29 +94,8 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 pythonpath = "."
-asyncio_default_fixture_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "session"
+testpaths = ["tests/unit", "tests/integration"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["lseg_market_agent","frontend"]
-
-[tool.agents-cli]
-# Generation metadata - enables CLI commands to understand project context
-# These fields allow any generated project to work as a remote template
-name = "lsegmcpagentdemo-beta-adk"
-description = ""
-base_template = "local_lsegmcpagentdemo-beta-adk"
-agent_directory = "lseg_market_agent"
-
-# Generation context
-generated_at = "2026-04-25T01:39:34.534049+00:00"
-acli_version = "0.1.1"
-
-[tool.agents-cli.create_params]
-# Parameters used during project creation
-deployment_target = "agent_runtime"
-session_type = "none"
-cicd_runner = "skip"
-include_data_ingestion = false
-
-datastore = "none"
-

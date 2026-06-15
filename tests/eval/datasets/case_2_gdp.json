@@ -1,0 +1,18 @@
+{
+  "eval_cases": [
+    {
+      "eval_case_id": "us_macro_gdp",
+      "prompt": {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Show me the latest US GDP and Unemployment figures."
+          }
+        ]
+      },
+      "expected_tools": [
+        "qa_macroeconomic"
+      ]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 
 import requests
@@ -19,7 +20,7 @@ def get_lseg_token() -> str:
     current_time = time.time()
     # Check if cached token is still valid (adding a 60-second buffer)
     if _LSEG_TOKEN_CACHE["access_token"] and current_time + 60 < _LSEG_TOKEN_CACHE["expires_at"]:
-        print("Using cached LSEG access token...")
+        print("Using cached LSEG access token...", file=sys.stderr)
         return _LSEG_TOKEN_CACHE["access_token"]
 
     client_id = os.getenv("LSEG_CLIENT_ID")
@@ -37,7 +38,7 @@ def get_lseg_token() -> str:
         "scope": "lfa"
     }
 
-    print("Fetching new LSEG access token...")
+    print("Fetching new LSEG access token...", file=sys.stderr)
     response = requests.post(url, headers=headers, data=data)
     response.raise_for_status()
 
@@ -52,7 +53,7 @@ def get_lseg_token() -> str:
     _LSEG_TOKEN_CACHE["access_token"] = token
     _LSEG_TOKEN_CACHE["expires_at"] = current_time + expires_in
 
-    print(f"Token refreshed successfully. Expires in {expires_in} seconds.")
+    print(f"Token refreshed successfully. Expires in {expires_in} seconds.", file=sys.stderr)
     return token
 
 def lseg_header_provider(context: ReadonlyContext) -> dict[str, str]:
@@ -62,15 +63,10 @@ def lseg_header_provider(context: ReadonlyContext) -> dict[str, str]:
 
 def create_lseg_mcp_toolset() -> MCPToolset:
     """Creates the ADK MCPToolset authenticated to LSEG's API."""
-    # Fetch initial token for discovery
-    token = get_lseg_token()
-
     return MCPToolset(
         connection_params=StreamableHTTPConnectionParams(
             url="https://api.analytics.lseg.com/lfa/mcp",
-            headers={
-                "Authorization": f"Bearer {token}",
-            },
+            headers={},
             timeout=180.0  # 3 minutes for long-running quantitative requests
         ),
         header_provider=lseg_header_provider
