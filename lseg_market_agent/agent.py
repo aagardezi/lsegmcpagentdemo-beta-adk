@@ -9,6 +9,10 @@ from .config import config
 from .helpercode import get_project_id
 from .pdf_generator import create_pdf_report
 
+import pathlib
+from google.adk.skills import load_skill_from_dir
+from google.adk.tools import skill_toolset
+
 api_client = genai.Client(
     vertexai=True,
     project=get_project_id(),
@@ -26,6 +30,14 @@ api_client31 = genai.Client(
 
 model31 = google_llm.Gemini(model=config.gemini31_model)
 model31.api_client= api_client31
+
+visulization_skill = load_skill_from_dir(
+    pathlib.Path(__file__).parent / "skills" / "visualization-planning"
+)
+
+my_skill_toolset = skill_toolset.SkillToolset(
+    skills=[visulization_skill],
+)
 
 RIC_RESOLVER_INSTRUCTION = (
     "You are a stock RIC Code or Symbol resolver. "
@@ -133,6 +145,9 @@ graphing_agent = LlmAgent(
     model=model31,
     # model="gemini-3.1-pro-preview",
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
+    tools=[
+        my_skill_toolset,
+    ],
     code_executor=BuiltInCodeExecutor()
 )
 
