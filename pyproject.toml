@@ -20,6 +20,8 @@ dependencies = [
     "fpdf2",
     "markdown2",
     "pydantic",
+    "a2a-sdk[http-server]~=0.3.22",
+    "aiohttp>=3.13.4",
 ]
 requires-python = "==3.11.*"
 

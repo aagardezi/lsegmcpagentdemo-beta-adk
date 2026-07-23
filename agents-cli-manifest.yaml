@@ -3,7 +3,7 @@ description: ''
 base_template: adk
 agent_directory: lseg_market_agent
 generated_at: '2026-04-25T01:39:34.534049+00:00'
-acli_version: 0.4.0
+acli_version: 1.0.0
 create_params:
   deployment_target: agent_runtime
   session_type: none
