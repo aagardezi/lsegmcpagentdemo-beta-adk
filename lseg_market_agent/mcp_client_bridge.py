@@ -39,7 +39,7 @@ def get_lseg_token() -> str:
     }
 
     print("Fetching new LSEG access token...", file=sys.stderr)
-    response = requests.post(url, headers=headers, data=data)
+    response = requests.post(url, headers=headers, data=data, timeout=10.0)
     response.raise_for_status()
 
     res_json = response.json()
