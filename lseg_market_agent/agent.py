@@ -3,6 +3,7 @@ from google.adk.agents import LlmAgent
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.models import google_llm
 from google.adk.tools import AgentTool, google_search
+from pydantic import BaseModel, Field
 
 from . import mcp_client_bridge
 from .config import config
@@ -28,6 +29,26 @@ api_client31 = genai.Client(
 
 model31 = google_llm.Gemini(model=config.gemini31_model)
 model31.api_client= api_client31
+
+
+class GraphingOutput(BaseModel):
+    artifact_name: str = Field(description="Filename of the generated graph PNG file saved as artifact.")
+    confirmation: str = Field(description="Confirming message explaining the plotted parameters.")
+
+
+class RiskCriticOutput(BaseModel):
+    over_optimism: str = Field(description="Potential over-optimism compliance note.")
+    downside_risks: str = Field(description="Concise downside macro/credit/duration risk notes.")
+    hedging_costs: str = Field(description="Currency hedging cost analysis notes.")
+    risk_mitigation: str = Field(description="Suggested risk mitigation/hedging strategy suggestion.")
+
+
+class ReportOutput(BaseModel):
+    report_markdown: str = Field(description="The complete compiled report text in Markdown format.")
+
+
+class PDFGeneratorOutput(BaseModel):
+    pdf_artifact_path: str = Field(description="The filename of the compiled PDF report saved as artifact.")
 
 RIC_RESOLVER_INSTRUCTION = (
     "You are a stock RIC Code or Symbol resolver. "
@@ -80,15 +101,15 @@ You have access to a rich set of financial tools categorized by analytical domai
    - `qa_macroeconomic`: Fetch macroeconomic data (GDP, CPI, unemployment). First search mnemonics with `list`, then fetch with `latest` or `series`.
 
 
-When the user asks you to analyze a company or market condition, you should act as an Orchestrator:
+When the user asks you to analyze a company or market condition, you should act as an Orchestrator and manage the entire pipeline sequentially:
 1. Proactively gather information from AT LEAST THREE tools relevant to the domain (e.g. Fundamentals, Forward Estimates, and News Headlines for Equities; yield curves, risk analytics, and credit curves for Fixed Income). Gather as much detailed numerical history and news scope as possible to ensure subsequent agents have rich context. For advanced capital or risk analyses, optionally leverage options/bonds/FX pricing to provide deeper risk audits.
 2. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
 3. Always cite the specific metrics and news stories retrieved. 
-4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, yield curve, FTSE index return comparison, or implied volatility surface) would make the final answer or report more appealing, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style and supply the numerical data.
-   - Ensure you state in your delegation prompt *why* this graph is helpful and how to style it.
-   - Do NOT instruct the graphing agent to transfer control. The graphing agent will automatically return control to you once it finishes.
-   - Once control returns to you from the graphing agent, you MUST immediately transfer the gathered context (including the generated graph) to the `risk_critic_agent` for a compliance audit.
-5. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or the graphing agent has already completed, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
+4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, yield curve, FTSE index return comparison, or implied volatility surface) would make the final answer or report more appealing, you MUST delegate the rendering to your `graphing_agent` by calling `request_task_graphing_agent`. Provide it with the numerical data and styling instructions.
+5. Audit the data by calling `request_task_risk_critic_agent`. Provide it with all the gathered data and context (and the graph details if generated).
+6. Compile the report text by calling `request_task_report_agent`. Provide it with the gathered data, the graph details, and the risk audit results from the risk critic.
+7. Compile the report and graph into a PDF file by calling `request_task_pdf_generator_agent`. Provide it with the report markdown and the graph image path.
+8. Output the final PDF path to the user (which you get from the PDF generator task output).
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:
@@ -125,7 +146,7 @@ Ensure your Python code is well-formatted with proper newlines separating statem
 IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
 ROUTING INSTRUCTION:
 1. First, write and execute your Python code to draw the graph.
-2. Once the code execution completes and the graph is generated, output a brief confirming message (e.g., "Here is the graph") and stop. Do not call any other tools or attempt to transfer control. The framework will automatically return control to the orchestrator.
+2. Once the code execution completes and the graph is generated, call the `finish_task` tool providing the `artifact_name` (the filename of the generated graph PNG) and `confirmation` (confirming message explaining the plotted parameters).
 
 ### Visualization Planning Guidance:
 Choose the chart type that best clarifies the analytical intent and minimizes cognitive load. Do not force a complex chart when a simple one suffices (e.g., use a line chart for a single time series trend).
@@ -148,12 +169,11 @@ graphing_agent = LlmAgent(
     name="graphing_agent",
     description="Draws financial graphs, plots, and visualizes data using python.",
     model=model31,
-    # model="gemini-3.1-pro-preview",
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
     tools=[],
     code_executor=BuiltInCodeExecutor(),
-    disallow_transfer_to_parent=True,
-    disallow_transfer_to_peers=True,
+    mode="task",
+    output_schema=GraphingOutput,
 )
 
 RISK_CRITIC_AGENT_INSTRUCTIONS = """You are a Risk Management & Compliance Auditor.
@@ -174,14 +194,16 @@ Your response MUST be structured with these exact headers:
 - **Risk Mitigation Suggestion**: [Analysis]
 
 Do not write a full, comprehensive narrative report. Provide a concise auditing note back.
-ROUTING INSTRUCTION: Once you have provided your audited risk points, you MUST call the `transfer_to_agent` tool to transfer execution to `report_agent` so they can compile the final markdown document.
+ROUTING INSTRUCTION: Once you have completed your analysis, you MUST call the `finish_task` tool providing the structured outputs for `over_optimism`, `downside_risks`, `hedging_costs`, and `risk_mitigation`. Do not attempt to transfer control to other agents.
 """
 
 risk_critic_agent = LlmAgent(
     name="risk_critic_agent",
     description="Audits financial analyses for over-optimism, missed macro/spread risks, and suggests risk mitigation hedging notes.",
     model=model,
-    instruction=RISK_CRITIC_AGENT_INSTRUCTIONS
+    instruction=RISK_CRITIC_AGENT_INSTRUCTIONS,
+    mode="task",
+    output_schema=RiskCriticOutput,
 )
 
 REPORT_AGENT_INSTRUCTIONS = """You are an Elite Institutional Equity Research Analyst & Financial Reporter.
@@ -238,7 +260,7 @@ Your response MUST be a single Markdown document following this exact structure:
 5. **No Graph Rendering**: Do not attempt to draw graphs or output code.
 
 ### ROUTING INSTRUCTION:
-Once you have written the Markdown report, you MUST call the `transfer_to_agent` tool to transfer execution to `pdf_generator_agent` so they can compile the final PDF document. Do not stop.
+Once you have written the Markdown report, you MUST call the `finish_task` tool providing the `report_markdown` content. Do not attempt to transfer control to other agents.
 """
 
 
@@ -246,7 +268,9 @@ report_agent = LlmAgent(
     name="report_agent",
     description="Synthesizes gathered financial data and visual inferences into a final, comprehensive, and professional user-facing financial report formatted in Markdown.",
     model=model,
-    instruction=REPORT_AGENT_INSTRUCTIONS
+    instruction=REPORT_AGENT_INSTRUCTIONS,
+    mode="task",
+    output_schema=ReportOutput,
 )
 
 PDF_GENERATOR_INSTRUCTIONS = """You are a PDF Generation and Formatting Agent.
@@ -257,7 +281,7 @@ CRITICAL INSTRUCTION:
 1. Review the conversation history to see if the `graphing_agent` outputted any graphs / images (look for file paths ending in `.png`).
 2. If any graphs were generated, gather their exact file paths and pass them into the `image_paths` parameter list of the `create_pdf_report` tool call.
 Providing explicit paths prevents directory scanning errors and ensures only relevant charts belong in the final report.
-Once the PDF is created, respond to the user with a brief message confirming the path to the downloadable PDF file.
+Once the PDF is created, call the `finish_task` tool providing the `pdf_artifact_path`.
 """
 
 pdf_generator_agent = LlmAgent(
@@ -265,7 +289,9 @@ pdf_generator_agent = LlmAgent(
     description="Generates a downloadable PDF of the final markdown report and appended visualizations.",
     model=model,
     instruction=PDF_GENERATOR_INSTRUCTIONS,
-    tools=[create_pdf_report]
+    tools=[create_pdf_report],
+    mode="task",
+    output_schema=PDFGeneratorOutput,
 )
 
 # Removed top-level print causing CLI JSONDecodeError during introspection
