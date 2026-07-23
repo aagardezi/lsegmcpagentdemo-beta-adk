@@ -234,3 +234,11 @@ deployment_metadata.json
 *.crt
 *.der
 
+# Media and documentation assets
+*.mp4
+*.pdf
+*.html
+images/
+helpercode/recordings/
+
+
