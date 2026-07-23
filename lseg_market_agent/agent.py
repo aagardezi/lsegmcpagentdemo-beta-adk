@@ -9,9 +9,7 @@ from .config import config
 from .helpercode import get_project_id
 from .pdf_generator import create_pdf_report
 
-import pathlib
-from google.adk.skills import load_skill_from_dir
-from google.adk.tools import skill_toolset
+
 
 api_client = genai.Client(
     vertexai=True,
@@ -30,14 +28,6 @@ api_client31 = genai.Client(
 
 model31 = google_llm.Gemini(model=config.gemini31_model)
 model31.api_client= api_client31
-
-visulization_skill = load_skill_from_dir(
-    pathlib.Path(__file__).parent / "skills" / "visualization-planning"
-)
-
-my_skill_toolset = skill_toolset.SkillToolset(
-    skills=[visulization_skill],
-)
 
 RIC_RESOLVER_INSTRUCTION = (
     "You are a stock RIC Code or Symbol resolver. "
@@ -63,7 +53,7 @@ You have access to a rich set of financial tools categorized by analytical domai
 1. **Equity Research**:
    - `qa_company_fundamentals`: Historical financials (balance sheets, income statements, cash flows). Provide the `identifier` (e.g., 'AAPL' or 'Apple').
    - `qa_ibes_consensus`: Forward-looking consensus estimates (EPS, Revenue, Dividend forecasts). Provide the `ticker` as just the symbol (e.g., 'AAPL') and a request type.
-   - `important_company_news` / `insight_headlines`: Corporate news headlines and sentiment. For `insight_headlines`, specify companies with their RIC (e.g., AAPL.O) in the `rics` parameter.
+   - `important_company_news`: Corporate news headlines and sentiment. Specify companies with their RIC (e.g., AAPL.N) in the `companyRics` parameter.
    - `historical_pricing_summaries`: Retrieve historical stock/asset price action (requires `universe` as a RIC (e.g., AAPL.O) and optionally `startDate` and `endDate` in YYYY-MM-DD format).
    - `option_value`: Pricing, valuation, and Greeks risk metrics (Delta, Gamma, Vega, Theta, Rho) for options hedging models or implied expectations.
    - `equity_vol_surface`: Implied volatility surfaces for inspecting implied volatility skews / market fear index.
@@ -96,8 +86,9 @@ When the user asks you to analyze a company or market condition, you should act 
 3. Always cite the specific metrics and news stories retrieved. 
 4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, yield curve, FTSE index return comparison, or implied volatility surface) would make the final answer or report more appealing, you MUST delegate the rendering to your `graphing_agent` subagent. Choose an appropriate visual style and supply the numerical data.
    - Ensure you state in your delegation prompt *why* this graph is helpful and how to style it.
-   - If a final report or risk audit is part of the flow, explicitly instruct the graphing agent to transfer to `risk_critic_agent` afterwards.
-5. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or they are already complete, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
+   - Do NOT instruct the graphing agent to transfer control. The graphing agent will automatically return control to you once it finishes.
+   - Once control returns to you from the graphing agent, you MUST immediately transfer the gathered context (including the generated graph) to the `risk_critic_agent` for a compliance audit.
+5. If the user requests a comprehensive report and no graphs are needed (e.g., because there is no suitable numerical data to plot) or the graphing agent has already completed, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit. Inform the risk critic that on completion it must transfer to `report_agent` to synthesize the final markdown document. Do not write the final report comprehensively yourself.
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:
@@ -113,11 +104,10 @@ IMPORTANT CONSTRAINTS:
 3. `historical_pricing_summaries` formatting:
    - `universe`: Must be the RIC format (e.g., "AAPL.O").
    - `startDate` and `endDate`: Optional date parameters formatted as YYYY-MM-DD.
-4. `insight_headlines` uses `rics` for companies (AAPL.O), not plain `query`.
-5. Do not guess DataStream Mnemonics for macro data, search them first using `qa_macroeconomic` list tool!
+4. Do not guess DataStream Mnemonics for macro data, search them first using `qa_macroeconomic` list tool!
 
 CRITICAL TOOL CALLING RULES:
-1. DO NOT add any prefix to the tool names like `default_api:`. Use only the exact strings like `insight_headlines` or `historical_pricing_summaries`.
+1. DO NOT add any prefix to the tool names like `default_api:`. Use only the exact strings like `important_company_news` or `historical_pricing_summaries`.
 2. If you need to make multiple tool calls in parallel, output each call correctly using the structural interface—do not concatenate string calls like `call:default_api:...`.
 """
 GRAPHING_AGENT_INSTRUCTIONS = """You are a Data Visualization and Graphing Agent.
@@ -135,8 +125,23 @@ Ensure your Python code is well-formatted with proper newlines separating statem
 IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
 ROUTING INSTRUCTION:
 1. First, write and execute your Python code to draw the graph.
-2. Once the code execution completes and the graph is generated, in your very next response (which the framework will automatically request after tool execution), you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent` (or `report_agent` if instructed). Do not wait for further user input.
-Do NOT attempt to run code and call `transfer_to_agent` simultaneously in a single turn.
+2. Once the code execution completes and the graph is generated, output a brief confirming message (e.g., "Here is the graph") and stop. Do not call any other tools or attempt to transfer control. The framework will automatically return control to the orchestrator.
+
+### Visualization Planning Guidance:
+Choose the chart type that best clarifies the analytical intent and minimizes cognitive load. Do not force a complex chart when a simple one suffices (e.g., use a line chart for a single time series trend).
+Here are suggested mappings from analytical intent to chart types:
+- **Trend inflection detection**: Candlestick with volume overlay (annotate regime changes, mark support/resistance).
+- **Price vs. fundamentals divergence**: Multi-line chart with event markers (overlay news context on price action).
+- **Relative performance**: Line chart (indexed to 100) (multiple securities vs. benchmark).
+- **Portfolio concentration risk**: Treemap with conditional formatting (size by market value, color by % NAV).
+- **Sector rotation/allocation**: Sankey diagram or waterfall chart (show capital flow direction).
+- **Return attribution**: Waterfall chart (additive decomposition of performance drivers).
+- **Risk distribution**: VaR histogram + box plot (show dispersion and tail events).
+- **Correlation structure**: Heatmap with hierarchical clustering (identify factor exposures).
+- **Risk vs. return tradeoff**: Scatter/bubble chart (size bubbles by position size or volume).
+- **Scenario analysis**: Football field (valuation ranges) (show probability-weighted outcomes).
+- **Option positioning**: 2D/3D Greeks surfaces (delta/gamma profiles across strikes).
+- **Time-series decomposition**: Stacked area chart (contribution over time).
 """
 
 graphing_agent = LlmAgent(
@@ -145,10 +150,10 @@ graphing_agent = LlmAgent(
     model=model31,
     # model="gemini-3.1-pro-preview",
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
-    tools=[
-        my_skill_toolset,
-    ],
-    code_executor=BuiltInCodeExecutor()
+    tools=[],
+    code_executor=BuiltInCodeExecutor(),
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )
 
 RISK_CRITIC_AGENT_INSTRUCTIONS = """You are a Risk Management & Compliance Auditor.
@@ -266,7 +271,7 @@ pdf_generator_agent = LlmAgent(
 # Removed top-level print causing CLI JSONDecodeError during introspection
 root_agent = LlmAgent(
     name="lseg_market_agent",
-    model=model,
+    model=model31,
     instruction=AGENT_INSTRUCTIONS,
     tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
     sub_agents=[graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
