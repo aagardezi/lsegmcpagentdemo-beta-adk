@@ -109,7 +109,7 @@ When the user asks you to analyze a company or market condition, you should act 
 5. Audit the data by calling `request_task_risk_critic_agent`. Provide it with all the gathered data and context (and the graph details if generated).
 6. Compile the report text by calling `request_task_report_agent`. Provide it with the gathered data, the graph details, and the risk audit results from the risk critic.
 7. Compile the report and graph into a PDF file by calling `request_task_pdf_generator_agent`. Provide it with the report markdown and the graph image path.
-8. Output the final PDF path to the user (which you get from the PDF generator task output).
+8. Output the complete Markdown report (the `report_markdown` text returned by `report_agent`) directly in your final response so the user can read it formatted in their chat window, and also state the final PDF path (which you get from the PDF generator task output).
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:

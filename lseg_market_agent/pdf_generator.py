@@ -104,6 +104,19 @@ async def create_pdf_report(
                 if tool_context is not None:
                     try:
                         artifact = await tool_context.load_artifact(filename=img_path)
+                        if not (artifact and hasattr(artifact, 'inline_data') and artifact.inline_data):
+                            # Try to find the latest generated media graph in the session
+                            print(f"[PDF Generator] Exact artifact {img_path} not found. Searching session artifacts...")
+                            all_artifacts = await tool_context.list_artifacts()
+                            media_pngs = sorted([
+                                a for a in all_artifacts 
+                                if a.startswith("media__") and a.endswith(".png")
+                            ])
+                            if media_pngs:
+                                latest_media = media_pngs[-1]
+                                print(f"[PDF Generator] Resolved {img_path} -> latest session graph: {latest_media}")
+                                artifact = await tool_context.load_artifact(filename=latest_media)
+                        
                         if artifact and hasattr(artifact, 'inline_data') and artifact.inline_data:
                             import tempfile
                             with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_img:
@@ -126,7 +139,7 @@ async def create_pdf_report(
                 pdf.ln(10)
                 os.remove(img_path)
             except Exception as e:
-                 print(f"[PDF Generator] Failed to embed image {img_path}: {e}")
+                print(f"[PDF Generator] Failed to embed image {img_path}: {e}")
 
     # Render purely in-memory
     try:

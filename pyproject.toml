@@ -97,6 +97,7 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 testpaths = ["tests/unit", "tests/integration"]
 
 [tool.hatch.build.targets.wheel]
