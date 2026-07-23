@@ -6,11 +6,11 @@ class ResearchConfiguration:
 
     # gemini_model: str = "gemini-flash-latest"
     # gemini_model: str = "gemini-2.5-flash-preview-09-2025"
-    gemini_flash_model: str = "gemini-2.5-flash"
-    gemini_pro_model: str = "gemini-2.5-pro"
-    gemini_model: str = "gemini-2.5-flash"
-    gemini31_model: str = "gemini-2.5-pro"
-    gemini_3_pro_model: str = "gemini-2.5-pro"
+    gemini_flash_model: str = "gemini-3.6-flash"
+    gemini_pro_model: str = "gemini-3.6-flash"
+    gemini_model: str = "gemini-3.6-flash"
+    gemini31_model: str = "gemini-3.6-flash"
+    gemini_3_pro_model: str = "gemini-3.6-flash"
 
 
 
