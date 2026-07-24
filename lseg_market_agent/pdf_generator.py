@@ -98,6 +98,9 @@ async def create_pdf_report(
         pdf.cell(0, 10, 'Generated Visualisations', ln=1)
         pdf.ln(5)
 
+        media_pngs = None
+        resolved_missing_count = 0
+
         for img_path in image_paths:
             try:
                 # Load from artifact service first
@@ -105,24 +108,29 @@ async def create_pdf_report(
                     try:
                         artifact = await tool_context.load_artifact(filename=img_path)
                         if not (artifact and hasattr(artifact, 'inline_data') and artifact.inline_data):
-                            # Try to find the latest generated media graph in the session
                             print(f"[PDF Generator] Exact artifact {img_path} not found. Searching session artifacts...")
-                            all_artifacts = await tool_context.list_artifacts()
-                            import re
-                            pattern = re.compile(r"^(media__.*\.png|\d{8}_\d{6}\.png)$")
-                            matching_artifacts = [a for a in all_artifacts if pattern.match(a)]
+                            if media_pngs is None:
+                                all_artifacts = await tool_context.list_artifacts()
+                                import re
+                                pattern = re.compile(r"^(media__.*\.png|\d{8}_\d{6}\.png)$")
+                                matching_artifacts = [a for a in all_artifacts if pattern.match(a)]
 
-                            def get_sort_key(filename):
-                                ts_match = re.search(r"(\d{8}_\d{6})", filename)
-                                if ts_match:
-                                    return (1, ts_match.group(1), filename)
-                                return (0, "", filename)
+                                def get_sort_key(filename):
+                                    ts_match = re.search(r"(\d{8}_\d{6})", filename)
+                                    if ts_match:
+                                        return (1, ts_match.group(1), filename)
+                                    return (0, "", filename)
 
-                            media_pngs = sorted(matching_artifacts, key=get_sort_key)
+                                media_pngs = sorted(matching_artifacts, key=get_sort_key)
+
                             if media_pngs:
-                                latest_media = media_pngs[-1]
-                                print(f"[PDF Generator] Resolved {img_path} -> latest session graph: {latest_media}")
-                                artifact = await tool_context.load_artifact(filename=latest_media)
+                                if resolved_missing_count < len(media_pngs):
+                                    resolved_media = media_pngs[resolved_missing_count]
+                                    resolved_missing_count += 1
+                                    print(f"[PDF Generator] Resolved {img_path} -> session graph: {resolved_media}")
+                                    artifact = await tool_context.load_artifact(filename=resolved_media)
+                                else:
+                                    print(f"[PDF Generator] No more session graphs available for fallback of {img_path}")
                         
                         if artifact and hasattr(artifact, 'inline_data') and artifact.inline_data:
                             import tempfile
