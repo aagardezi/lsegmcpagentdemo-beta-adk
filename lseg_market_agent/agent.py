@@ -224,12 +224,12 @@ You must support plotting for the following data shapes:
    for i in range(len(methodologies)):
        ax.barh(y_pos[i], max_vals[i] - min_vals[i], left=min_vals[i], height=0.4, color='#004B87', alpha=0.7)
        # Add min/max labels
-       ax.text(min_vals[i] - 2, y_pos[i], f"${min_vals[i]}", va='center', ha='right', color='#708090', fontsize=9)
-       ax.text(max_vals[i] + 2, y_pos[i], f"${max_vals[i]}", va='center', ha='left', color='#708090', fontsize=9)
+       ax.text(min_vals[i] - 2, y_pos[i], "$" + str(min_vals[i]), va='center', ha='right', color='#708090', fontsize=9)
+       ax.text(max_vals[i] + 2, y_pos[i], "$" + str(max_vals[i]), va='center', ha='left', color='#708090', fontsize=9)
 
    # Plot current price line
    if current_price:
-       ax.axvline(current_price, color='#D32F2F', linestyle='--', linewidth=1.5, label=f'Current Price (${current_price})')
+       ax.axvline(current_price, color='#D32F2F', linestyle='--', linewidth=1.5, label="Current Price ($" + str(current_price) + ")")
        ax.legend(loc='upper right')
 
    ax.set_yticks(y_pos)
@@ -308,7 +308,7 @@ You must support plotting for the following data shapes:
    # Data
    dates = pd.date_range(start='2023-01-01', periods=100)
    prices = 100 + pd.Series(np.random.randn(100)).cumsum()
-   df = pd.DataFrame({'Price': prices}, index=dates)
+   df = pd.DataFrame(dict(Price=prices), index=dates)
 
    fig, ax = plt.subplots(figsize=(10, 5))
    ax.plot(df.index, df['Price'], color='#004B87', linewidth=2, label='Price')
