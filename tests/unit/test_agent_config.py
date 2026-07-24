@@ -12,7 +12,7 @@ with patch("requests.post", return_value=mock_response) as mock_post:
 
 def test_agent_structure() -> None:
     assert root_agent.name == "lseg_market_agent"
-    assert len(root_agent.sub_agents) == 4
+    assert len(root_agent.sub_agents) == 5
     
     # Verify that the instruction string does not contain legacy tool names
     instructions = root_agent.instruction
@@ -82,3 +82,14 @@ def test_report_agent_instructions() -> None:
     assert "Credit & Debt Overlays" in instr
     assert "Currency Hedging Analysis" in instr
     assert "Benchmark Performance (IXM)" in instr
+
+def test_visualization_planner_agent_config() -> None:
+    planner_subagent = next(a for a in root_agent.sub_agents if a.name == "visualization_planner_agent")
+    assert planner_subagent.mode == "task"
+    from lseg_market_agent.agent import VisualizationPlanOutput
+    assert planner_subagent.output_schema == VisualizationPlanOutput
+    
+    instr = planner_subagent.instruction
+    assert "chart_type" in instr
+    assert "annotations" in instr
+    assert "finish_task" in instr

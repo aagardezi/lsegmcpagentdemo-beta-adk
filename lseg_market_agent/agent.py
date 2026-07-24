@@ -31,6 +31,26 @@ model31 = google_llm.Gemini(model=config.gemini31_model)
 model31.api_client= api_client31
 
 
+class EventAnnotation(BaseModel):
+    date: str = Field(description="Date of the event in YYYY-MM-DD format (for time-series) or x-axis value.")
+    label: str = Field(description="Brief label/description of the event.")
+
+
+class ChartSpec(BaseModel):
+    chart_type: str = Field(description="Type of chart to generate (e.g., 'line', 'bar', 'football_field', 'heatmap', 'yield_curve', 'fx_forward_curve', 'volatility_smile').")
+    title: str = Field(description="Title of the chart.")
+    data_description: str = Field(description="Detailed description of the data to be plotted, including keys and values from the context.")
+    x_label: str = Field(description="Label for the x-axis.")
+    y_label: str = Field(description="Label for the y-axis.")
+    annotations: list[EventAnnotation] = Field(default=[], description="List of events to annotate on the chart.")
+    styling_instructions: str = Field(default="", description="Specific styling instructions, e.g., color preferences, log scale, etc.")
+
+
+class VisualizationPlanOutput(BaseModel):
+    plan_explanation: str = Field(description="Explanation of why these charts are planned or why no charts are needed.")
+    charts: list[ChartSpec] = Field(default=[], description="List of planned charts. Can be empty if no visualization is appropriate.")
+
+
 class GraphingOutput(BaseModel):
     artifact_name: str = Field(description="Filename of the generated graph PNG file saved as artifact.")
     confirmation: str = Field(description="Confirming message explaining the plotted parameters.")
@@ -64,6 +84,34 @@ ric_resolver_agent = LlmAgent(
     description="Resolves a company name to its stock RIC Code and Symbol using Google Search.",
     instruction=RIC_RESOLVER_INSTRUCTION,
     tools=[google_search],
+)
+
+VISUALIZATION_PLANNER_INSTRUCTIONS = """You are a Financial Visualization Planner.
+Your task is to analyze the gathered market data and news context, and determine if any visualizations (charts) would help explain the trends, divergences, or risks.
+You should plan 0 to N charts.
+
+For each planned chart, specify:
+1. `chart_type`: Choose from: line, bar, heatmap, football_field, yield_curve, fx_forward_curve, volatility_smile.
+2. `title`: Title of the chart.
+3. `data_description`: Describe the exact data to be plotted (e.g., "AAPL historical stock prices from 2023-01-01 to 2023-12-31").
+4. `x_label`: Label for the X-axis (e.g., "Dates").
+5. `y_label`: Label for the Y-axis (e.g., "Stock Price in USD").
+6. `annotations`: Crucially, identify specific key events or dates from the news context that should be annotated on the chart (especially for time-series charts). Use the EventAnnotation schema.
+7. `styling_instructions`: Any specific styling instructions.
+
+If no charts are needed (e.g., there is insufficient numerical data or a chart wouldn't add value), return an empty plan.
+
+ROUTING INSTRUCTION:
+Once you have completed your plan, you MUST call the `finish_task` tool providing the structured `VisualizationPlanOutput`.
+"""
+
+visualization_planner_agent = LlmAgent(
+    name="visualization_planner_agent",
+    description="Plans visualizations based on gathered data and news context.",
+    model=model,
+    instruction=VISUALIZATION_PLANNER_INSTRUCTIONS,
+    mode="task",
+    output_schema=VisualizationPlanOutput,
 )
 
 AGENT_INSTRUCTIONS = """You are a highly capable Cross-Asset Market Intelligence & Valuation Agent for LSEG.
@@ -105,11 +153,12 @@ When the user asks you to analyze a company or market condition, you should act 
 1. Proactively gather information from AT LEAST THREE tools relevant to the domain (e.g. Fundamentals, Forward Estimates, and News Headlines for Equities; yield curves, risk analytics, and credit curves for Fixed Income). Gather as much detailed numerical history and news scope as possible to ensure subsequent agents have rich context. For advanced capital or risk analyses, optionally leverage options/bonds/FX pricing to provide deeper risk audits.
 2. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
 3. Always cite the specific metrics and news stories retrieved. 
-4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data (e.g., timeseries prices, forward consensus comparisons, macro trends). If a visualization (e.g., stock price line chart, yield curve, FTSE index return comparison, or implied volatility surface) would make the final answer or report more appealing, you MUST delegate the rendering to your `graphing_agent` by calling `request_task_graphing_agent`. Provide it with the numerical data and styling instructions.
-5. Audit the data by calling `request_task_risk_critic_agent`. Provide it with all the gathered data and context (and the graph details if generated).
-6. Compile the report text by calling `request_task_report_agent`. Provide it with the gathered data, the graph details, and the risk audit results from the risk critic.
-7. Compile the report and graph into a PDF file by calling `request_task_pdf_generator_agent`. Provide it with the report markdown and the graph image path.
-8. Output the complete Markdown report (the `report_markdown` text returned by `report_agent`) directly in your final response so the user can read it formatted in their chat window, and also state the final PDF path (which you get from the PDF generator task output).
+4. **Visualization Planning**: Call the `visualization_planner_agent` (via `request_task_visualization_planner_agent`) with the gathered data and news context to get a visualization plan.
+5. **Chart Generation**: If the planner returns charts in its plan, loop over each planned chart and call the `graphing_agent` (via `request_task_graphing_agent`) to generate the PNG image. Provide the `ChartSpec` and the relevant numerical data. Collect all generated PNG filenames.
+6. **Risk Audit**: Call `risk_critic_agent` (via `request_task_risk_critic_agent`) with all gathered data, news context, and details of the generated charts.
+7. **Report Compilation**: Call `report_agent` (via `request_task_report_agent`) to compile the Markdown report. Provide it with the gathered data, risk audit results, and details/paths of all generated charts.
+8. **PDF Generation**: Call `pdf_generator_agent` (via `request_task_pdf_generator_agent`) with the Markdown report and the list of ALL generated graph PNG filenames in `image_paths`.
+9. **Final Output**: Output the complete Markdown report (the `report_markdown` text returned by `report_agent`) directly in your final response so the user can read it formatted in their chat window, and also state the final PDF path (which you get from the PDF generator task output).
 
 IMPORTANT CONSTRAINTS: 
 1. `qa_company_fundamentals` REQUIRES strict parameter formatting:
@@ -133,36 +182,165 @@ CRITICAL TOOL CALLING RULES:
 """
 GRAPHING_AGENT_INSTRUCTIONS = """You are a Data Visualization and Graphing Agent.
 You are equipped with a Python code execution environment.
-When you receive instructions along with numerical data, write a Python script (using libraries like matplotlib, pandas, or mplfinance) to plot the data.
-Support advanced formatting such as candlestick charts, moving averages, or bar charts when requested. If `mplfinance` is unavailable, gracefully fall back to configuring `matplotlib` for the requested style.
-Specifically, you must dynamically generate plotting code for new data shapes:
+When you receive a ChartSpec and numerical data, write a Python script (using libraries like matplotlib, pandas, numpy, or seaborn) to plot the data.
+You must strictly follow the LSEG Branding Visual Styles and use the provided code recipes for advanced financial charts.
+
+You must support plotting for the following data shapes:
 - **Yield Curves**: Plot interest rate curve points (`interest_rate_curve`) showing rate/yield against maturity/tenor.
 - **FTSE Index Return Comparisons**: Line charts comparing returns of multiple indices over time (`ixm_compare_index_return_time_series`).
-- **Implied Volatility Surfaces**: 3D surface plots or multi-line option skew plots showing implied volatility against strike and maturity (`equity_vol_surface`).
+- **Implied Volatility Surfaces/Smiles**: Plots showing implied volatility against strike and maturity (`equity_vol_surface`).
 
-You MUST output the graph to the user by rendering the plot (e.g., using plt.show() in matplotlib).
-Do not guess data; strictly plot the data provided to you in the prompt.
-Ensure your Python code is well-formatted with proper newlines separating statements. Do not concatenate multiple imports or statements on a single line.
-IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message (e.g., "Here is the graph") alongside the actual plotted image.
-ROUTING INSTRUCTION:
-1. First, write and execute your Python code to draw the graph.
-2. Once the code execution completes and the graph is generated, call the `finish_task` tool providing the `artifact_name` (the filename of the generated graph PNG) and `confirmation` (confirming message explaining the plotted parameters).
+### LSEG Branding Visual Styles:
+1. **Background**: Always use a clean white background.
+2. **Color Palette**:
+   - Primary: `#004B87` (LSEG Deep Blue)
+   - Secondary: `#008080` (Teal)
+   - Accent: `#708090` (Slate Grey)
+   - Additional (if needed): `#D32F2F` (Soft Red for negative/risk), `#388E3C` (Soft Green for positive/returns)
+3. **Grid Lines**: Enable light grid lines. Use `ax.grid(True, linestyle='--', alpha=0.3, color='#B0BEC5')`.
+4. **Spines**: Remove the top and right spines to keep the chart clean.
+   `ax.spines['top'].set_visible(False)`
+   `ax.spines['right'].set_visible(False)`
+5. **Layout**: Always use `plt.tight_layout()` before saving/showing.
+6. **Fonts**: Use clean sans-serif fonts (e.g., Arial, Helvetica) if possible. Title should be prominent.
 
-### Visualization Planning Guidance:
-Choose the chart type that best clarifies the analytical intent and minimizes cognitive load. Do not force a complex chart when a simple one suffices (e.g., use a line chart for a single time series trend).
-Here are suggested mappings from analytical intent to chart types:
-- **Trend inflection detection**: Candlestick with volume overlay (annotate regime changes, mark support/resistance).
-- **Price vs. fundamentals divergence**: Multi-line chart with event markers (overlay news context on price action).
-- **Relative performance**: Line chart (indexed to 100) (multiple securities vs. benchmark).
-- **Portfolio concentration risk**: Treemap with conditional formatting (size by market value, color by % NAV).
-- **Sector rotation/allocation**: Sankey diagram or waterfall chart (show capital flow direction).
-- **Return attribution**: Waterfall chart (additive decomposition of performance drivers).
-- **Risk distribution**: VaR histogram + box plot (show dispersion and tail events).
-- **Correlation structure**: Heatmap with hierarchical clustering (identify factor exposures).
-- **Risk vs. return tradeoff**: Scatter/bubble chart (size bubbles by position size or volume).
-- **Scenario analysis**: Football field (valuation ranges) (show probability-weighted outcomes).
-- **Option positioning**: 2D/3D Greeks surfaces (delta/gamma profiles across strikes).
-- **Time-series decomposition**: Stacked area chart (contribution over time).
+### Matplotlib Recipes & Templates:
+
+1. **Football Field Chart (Valuation Ranges)**:
+   ```python
+   import matplotlib.pyplot as plt
+   import numpy as np
+
+   # Data: methodologies, min_val, max_val, current_price (optional)
+   methodologies = ['DCF', 'P/E Multiples', 'EV/EBITDA', '52-Week Range']
+   min_vals = [120, 110, 115, 90]
+   max_vals = [160, 145, 150, 150]
+   current_price = 135
+
+   fig, ax = plt.subplots(figsize=(8, 5))
+   y_pos = np.arange(len(methodologies))
+
+   # Plot bars representing ranges
+   for i in range(len(methodologies)):
+       ax.barh(y_pos[i], max_vals[i] - min_vals[i], left=min_vals[i], height=0.4, color='#004B87', alpha=0.7)
+       # Add min/max labels
+       ax.text(min_vals[i] - 2, y_pos[i], f"${min_vals[i]}", va='center', ha='right', color='#708090', fontsize=9)
+       ax.text(max_vals[i] + 2, y_pos[i], f"${max_vals[i]}", va='center', ha='left', color='#708090', fontsize=9)
+
+   # Plot current price line
+   if current_price:
+       ax.axvline(current_price, color='#D32F2F', linestyle='--', linewidth=1.5, label=f'Current Price (${current_price})')
+       ax.legend(loc='upper right')
+
+   ax.set_yticks(y_pos)
+   ax.set_yticklabels(methodologies)
+   ax.invert_yaxis()  # top-down
+   ax.set_title('Valuation Summary (Football Field)', fontsize=14, fontweight='bold', pad=15, color='#004B87')
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+   ax.grid(True, axis='x', linestyle='--', alpha=0.3, color='#B0BEC5')
+   plt.tight_layout()
+   plt.savefig('football_field.png')
+   ```
+
+2. **Heatmap (Correlation / Risk Factors)**:
+   ```python
+   import matplotlib.pyplot as plt
+   import numpy as np
+   import seaborn as sns
+
+   # Data: correlation matrix
+   data = np.random.rand(5, 5)
+   labels = ['US 10Y', 'S&P 500', 'Gold', 'USD/EUR', 'Brent Crude']
+
+   fig, ax = plt.subplots(figsize=(6, 5))
+   # Use custom colormap from LSEG palette (Teal to Blue)
+   sns.heatmap(data, annot=True, fmt=".2f", cmap='GnBu', xticklabels=labels, yticklabels=labels, ax=ax, cbar=True)
+   ax.set_title('Asset Class Correlations', fontsize=14, fontweight='bold', pad=15, color='#004B87')
+   plt.tight_layout()
+   plt.savefig('correlation_heatmap.png')
+   ```
+
+3. **Yield Curve / FX Forward Curve**:
+   ```python
+   import matplotlib.pyplot as plt
+
+   tenors = ['1M', '3M', '6M', '1Y', '2Y', '5Y', '10Y', '30Y']
+   yields = [5.1, 5.2, 5.3, 5.2, 4.8, 4.5, 4.2, 4.3]
+
+   fig, ax = plt.subplots(figsize=(8, 4.5))
+   ax.plot(tenors, yields, marker='o', linewidth=2, color='#004B87', label='Current Yield Curve')
+   ax.set_title('Sovereign Yield Curve', fontsize=14, fontweight='bold', pad=15, color='#004B87')
+   ax.set_xlabel('Tenor', color='#708090')
+   ax.set_ylabel('Yield (%)', color='#708090')
+   ax.grid(True, linestyle='--', alpha=0.3, color='#B0BEC5')
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+   plt.tight_layout()
+   plt.savefig('yield_curve.png')
+   ```
+
+4. **Implied Volatility Smile**:
+   ```python
+   import matplotlib.pyplot as plt
+
+   strikes = [80, 90, 95, 100, 105, 110, 120]
+   imp_vols = [25, 20, 18, 17, 18, 21, 26]
+
+   fig, ax = plt.subplots(figsize=(8, 4.5))
+   ax.plot(strikes, imp_vols, marker='^', linestyle='-', linewidth=2, color='#008080', label='Implied Volatility')
+   ax.set_title('Implied Volatility Smile (1M Expiry)', fontsize=14, fontweight='bold', pad=15, color='#004B87')
+   ax.set_xlabel('Strike Price', color='#708090')
+   ax.set_ylabel('Implied Volatility (%)', color='#708090')
+   ax.grid(True, linestyle='--', alpha=0.3, color='#B0BEC5')
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+   plt.tight_layout()
+   plt.savefig('vol_smile.png')
+   ```
+
+5. **Time-Series Chart with Event Annotations**:
+   ```python
+   import matplotlib.pyplot as plt
+   import pandas as pd
+   import numpy as np
+
+   # Data
+   dates = pd.date_range(start='2023-01-01', periods=100)
+   prices = 100 + pd.Series(np.random.randn(100)).cumsum()
+   df = pd.DataFrame({'Price': prices}, index=dates)
+
+   fig, ax = plt.subplots(figsize=(10, 5))
+   ax.plot(df.index, df['Price'], color='#004B87', linewidth=2, label='Price')
+
+   # Event Annotations
+   event_date = pd.to_datetime('2023-02-15')
+   event_y = df.loc[event_date, 'Price']
+
+   # 1. Vertical Line
+   ax.axvline(x=event_date, color='#708090', linestyle='--', alpha=0.7, linewidth=1.2)
+
+   # 2. Text Annotation
+   ax.annotate('Earnings Beat (+12%)',
+               xy=(event_date, event_y),
+               xytext=(event_date + pd.Timedelta(days=5), event_y + 5),
+               arrowprops=dict(facecolor='#008080', shrink=0.05, width=1, headwidth=6),
+               fontsize=9, color='#008080', fontweight='bold')
+
+   ax.set_title('Asset Price Action with Key Events', fontsize=14, fontweight='bold', pad=15, color='#004B87')
+   ax.grid(True, linestyle='--', alpha=0.3, color='#B0BEC5')
+   ax.spines['top'].set_visible(False)
+   ax.spines['right'].set_visible(False)
+   plt.tight_layout()
+   plt.savefig('price_action.png')
+   ```
+
+### General Rules:
+- Save all generated graphs as PNG files with descriptive names (e.g. `dcf_valuation.png`, `yield_curve.png`).
+- Do not guess data; strictly plot the data provided to you in the prompt.
+- Ensure your Python code is well-formatted with proper newlines separating statements.
+- IMPORTANT: Do NOT output the raw Python code text in your response. Only output a brief confirming message alongside the actual plotted image.
+- Once the code execution completes and the graph is generated, call the `finish_task` tool providing the `artifact_name` (the filename of the generated graph PNG) and `confirmation` (confirming message explaining the plotted parameters).
 """
 
 graphing_agent = LlmAgent(
@@ -300,7 +478,7 @@ root_agent = LlmAgent(
     model=model31,
     instruction=AGENT_INSTRUCTIONS,
     tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
-    sub_agents=[graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
+    sub_agents=[visualization_planner_agent, graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
 )
 
 from google.adk.apps import App
