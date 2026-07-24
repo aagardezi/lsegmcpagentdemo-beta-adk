@@ -10,7 +10,7 @@ Today, we are introducing the **Cross-Asset Market Intelligence & Valuation Agen
 
 ## 🏗️ The Architectural Blueprint: Collaborative Multi-Agent AI
 
-At the heart of this project is a **collaborative multi-agent framework** managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of five specialized agents, each with a distinct role, clear operational constraints, and a strict **Chain of Custody**.
+At the heart of this project is a **collaborative multi-agent framework** managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of six specialized agents, each with a distinct role, clear operational constraints, and a sequential execution flow managed by the Orchestrator.
 
 ![Agent Pipeline Flowchart](pipeline_flowchart.png)
 
@@ -20,22 +20,22 @@ Let's look at the specialized roles that form this elite team:
 The Orchestrator is the cognitive engine of the pipeline. When a user submits a query, the Orchestrator:
 - Resolves ambiguous company names to official stock RIC (Reuters Instrument Code) symbols using a dedicated Google Search sub-agent (`ric_resolver`).
 - Autonomously selects and queries the necessary LSEG MCP tools (requiring at least three tools, such as fundamentals, consensus, and news, to build rich context).
-- Tracks conversation context and decides which sub-agent to delegate to next.
+- Manages the execution flow of the sub-agents sequentially, passing data and receiving structured Pydantic outputs.
 
-### 2. The Python Graphing Sub-Agent (`graphing_agent`)
-Equipped with a secure, sandboxed **Python Code Execution environment** (`BuiltInCodeExecutor`), this agent dynamically writes and runs Python scripts (using libraries like `matplotlib`, `pandas`, or `mplfinance`) to plot financial data. It is capable of generating grouped bar charts for fundamentals, line charts for trend lines and moving averages, and high-fidelity candlestick charts for interday price action.
+### 2. The Visualization Planner (`visualization_planner_agent`)
+Analyzes the gathered data and news context to determine if any visualizations (charts) would help explain trends, divergences, or risks. It outputs a structured `VisualizationPlanOutput` containing specifications for 0 to N charts.
 
-### 3. The Risk Auditor Sub-Agent (`risk_critic_agent`)
-Compliance and risk management are paramount in finance. The Risk Auditor critiques the gathered financial data, looking strictly for:
-- **Downside Risks**: Missed macroeconomic headwinds (e.g., inflation, rate hikes) or company-specific deceleration.
-- **Over-optimism**: Forward consensus and headlines that appear overly bullish relative to historical hard metrics.
-- **Risk Mitigation**: Practical hedging strategies (e.g., protective puts or options overlays) to protect positions.
+### 3. The Python Graphing Sub-Agent (`graphing_agent`)
+Equipped with a secure, sandboxed **Python Code Execution environment** (`BuiltInCodeExecutor`), this agent dynamically writes and runs Python scripts (using libraries like `matplotlib`, `pandas`, or `seaborn`) to plot financial data based on the plan. It returns a `GraphingOutput` with the generated PNG filename.
 
-### 4. The Report Writer Sub-Agent (`report_agent`)
-The Report Writer acts as an elite institutional equity research analyst. It synthesizes raw financial tables, sentiment data, visual inferences, and the compliance audit into a comprehensive, structured Markdown document in the style of top-tier investment bank reports.
+### 4. The Risk Auditor Sub-Agent (`risk_critic_agent`)
+Compliance and risk management are paramount in finance. The Risk Auditor critiques the gathered financial data, looking strictly for downside risks, over-optimism, and asset-class specific risks, returning a structured `RiskCriticOutput`.
 
-### 5. The PDF Generator Sub-Agent (`pdf_generator_agent`)
-The final touch. This agent uses a custom Python FPDF implementation to programmatically parse the report markdown and cleanly append any generated visualization PNGs into a beautiful, downloadable PDF report.
+### 5. The Report Writer Sub-Agent (`report_agent`)
+The Report Writer acts as an elite institutional equity research analyst. It synthesizes raw financial tables, sentiment data, visual inferences, and the compliance audit into a comprehensive, structured Markdown report, returning a `ReportOutput`.
+
+### 6. The PDF Generator Sub-Agent (`pdf_generator_agent`)
+The final touch. This agent uses a custom Python PDF generator to programmatically compile the final Markdown report and any generated visualization PNGs into a professional, downloadable PDF report, returning a `PDFGeneratorOutput`.
 
 ---
 
@@ -78,7 +78,7 @@ This collaborative multi-agent system introduces several unique behaviors that s
 Even if the user **does not** explicitly ask for a chart, the Root Orchestrator analyzes the quantitative data it retrieves (e.g., timeseries closing prices, or forward EPS estimates). If it determines that a visualization will make the report more impactful, it proactively calls the `graphing_agent` to plot the data before advancing the workflow.
 
 ### 🛡️ Audit Before Authoring (Chain of Custody)
-The Report Writer is physically barred from generating a report before a formal risk audit is completed. If numerical data is compiled, the Orchestrator routes execution through the `risk_critic_agent` first, ensuring that potential over-optimism and downside risks are formally integrated as a core section of the final report.
+The pipeline enforces a strict sequential order: the Orchestrator calls the `risk_critic_agent` to secure a compliance audit *before* it calls the `report_agent` to compile the final report. This ensures that potential over-optimism and downside risks are formally integrated as a core section of the final report and cannot be bypassed.
 
 ### ⚡ Production-Ready Deployment
 Because the agents are packaged using standard ADK `App` definitions, they are instantly deployable across three runtime modes:

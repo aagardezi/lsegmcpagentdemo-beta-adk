@@ -11,9 +11,10 @@ The architecture illustrates a powerful synergy between the Google ADK and LSEG'
 ![Agent Architecture Diagram](agent_diagram.png)
 
 1. **Multi-Agent Orchestration (Google ADK)**: The system is structured using a multi-agent framework:
-   - **Root Orchestrator (`lseg_market_agent`)**: Acts as the cognitive orchestration engine. It autonomously queries the LSEG tools, tracks context, and decides which sub-agents to delegate to.
-   - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots, candlestick charts, and visualizations. Its visual choice operates proactively based on retrieved dataset dimensions.
-   - **Risk Auditor Sub-Agent (`risk_critic_agent`)**: Critiques the gathered financial analysis for over-optimism, evaluates downside risks, and suggests hedging notes alongside synthesis.
+   - **Root Orchestrator (`lseg_market_agent`)**: Acts as the cognitive orchestration engine. It autonomously queries the LSEG tools, tracks context, and manages the execution flow of the sub-agents sequentially.
+   - **Visualization Planner (`visualization_planner_agent`)**: Analyzes the gathered data and news context to determine if any visualizations (charts) would help explain trends, divergences, or risks, and outputs a structured Pydantic plan.
+   - **Graphing Sub-Agent (`graphing_agent`)**: Equipped with a Python Code Execution environment (`BuiltInCodeExecutor`) to dynamically generate financial plots based on the plan from the visualization planner.
+   - **Risk Auditor Sub-Agent (`risk_critic_agent`)**: Critiques the gathered financial analysis for over-optimism, evaluates downside risks, and suggests hedging notes, returning a structured Pydantic schema.
    - **Report Writer Sub-Agent (`report_agent`)**: Synthesizes all gathered data, risk audits, and visual inferences into a final, comprehensive, and professional Markdown report.
    - **PDF Generator Sub-Agent (`pdf_generator_agent`)**: Compiles the final Markdown report and any visual plots into a professional, downloadable PDF artifact.
 
@@ -30,18 +31,30 @@ graph TD
     User([User Prompt]) --> Orchestrator[Root Orchestrator]
     Orchestrator -->|1. Search & Fetch| LSEG[LSEG MCP Server]
     LSEG -->|2. Data Return| Orchestrator
-    Orchestrator -->|3. Delegate| Graphing[Graphing Sub-Agent]
-    Orchestrator -->|3. Or Bypass if no data fit| RiskCritique[Risk Auditor Sub-Agent]
-    Graphing -->|4. Plot Data & Transfer| RiskCritique
-    RiskCritique -->|5. Audit & Transfer| Report[Report Writer Sub-Agent]
-    Report -->|6. Compile Report & Transfer| PDFGen[PDF Generator Sub-Agent]
-    PDFGen -->|7. Generate PDF| UserResponse([Final Response])
+    
+    Orchestrator -->|3. Request Plan| Planner[Visualization Planner]
+    Planner -->|4. Return Plan Pydantic| Orchestrator
+    
+    Orchestrator -->|5. Request Chart if planned| Graphing[Graphing Sub-Agent]
+    Graphing -->|6. Return Chart Confirmation Pydantic| Orchestrator
+    
+    Orchestrator -->|7. Request Audit| RiskCritique[Risk Auditor Sub-Agent]
+    RiskCritique -->|8. Return Audit Pydantic| Orchestrator
+    
+    Orchestrator -->|9. Request Report| Report[Report Writer Sub-Agent]
+    Report -->|10. Return Markdown Pydantic| Orchestrator
+    
+    Orchestrator -->|11. Request PDF| PDFGen[PDF Generator Sub-Agent]
+    PDFGen -->|12. Return PDF Path Pydantic| Orchestrator
+    
+    Orchestrator -->|13. Final Response| UserResponse([Final Response])
 ```
 
 ### Key Interaction Mechanisms:
-1. **Automated Chain of Custody**: Agents automatically use explicit routing instructions specified in their system prompt to advance the workflow state (e.g., Orchestrator -> Graphing -> Risk Critic -> Report -> PDF). Or directly Orchestrator -> Risk Critic if no visualization is appropriate.
-2. **Proactive Visualization**: Even if the user doesn't ask for a graph, the Orchestrator analyzes the quantitative dataset dimensions (e.g., timeseries size or forward estimate spreads) and decides if a graph would make the analysis more impactful, triggers the `graphing_agent` proactively.
-3. **Draft Audit compliance**: The final report output does not originate from a single LLM. It involves a descriptive Risk Auditor audit that enforces downside risks or forward over-optimism critiques aren't skipped in the final synthesis conducted by the `report_agent`.
+1. **Sequential Orchestration**: The Root Orchestrator manages the pipeline sequentially using ADK 2.0 Task Mode. Instead of dynamic routing via `transfer_to_agent`, control always returns to the Orchestrator. Sub-agents execute their specific tasks and call `finish_task` to return structured Pydantic outputs.
+2. **Structured Communication**: All sub-agents communicate using rigid, predefined Pydantic schemas (e.g., `VisualizationPlanOutput`, `GraphingOutput`, `RiskCriticOutput`). This ensures type safety and predictable data structures between steps.
+3. **Formal Visualization Planning**: A dedicated `visualization_planner_agent` decides whether charts are needed and outlines the specifications (types, axes, annotations) before the graphing agent generates them.
+4. **Draft Audit Compliance**: The final report is compiled by the `report_agent` only after the `risk_critic_agent` has returned a structured risk audit, ensuring compliance notes are never bypassed.
 
 ---
 

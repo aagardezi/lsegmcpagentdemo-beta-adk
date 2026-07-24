@@ -164,7 +164,7 @@
 
 <h2>🏗️ The Architectural Blueprint: Collaborative Multi-Agent AI</h2>
 
-<p>At the heart of this project is a <strong>collaborative multi-agent framework</strong> managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of five specialized agents, each with a distinct role, clear operational constraints, and a strict <strong>Chain of Custody</strong>.</p>
+<p>At the heart of this project is a <strong>collaborative multi-agent framework</strong> managed by the Google ADK. Instead of relying on a single large language model (LLM) to handle data gathering, math reasoning, chart rendering, and writing, we orchestrate a team of six specialized agents, each with a distinct role, clear operational constraints, and a sequential execution flow managed by the Orchestrator.</p>
 
 <p><img src="pipeline_flowchart.png" alt="Agent Pipeline Flowchart" /></p>
 
@@ -175,26 +175,27 @@
 <p>The Orchestrator is the cognitive engine of the pipeline. When a user submits a query, the Orchestrator:
 - Resolves ambiguous company names to official stock RIC (Reuters Instrument Code) symbols using a dedicated Google Search sub-agent (<code>ric_resolver</code>).
 - Autonomously selects and queries the necessary LSEG MCP tools (requiring at least three tools, such as fundamentals, consensus, and news, to build rich context).
-- Tracks conversation context and decides which sub-agent to delegate to next.</p>
+- Manages the execution flow of the sub-agents sequentially, passing data and receiving structured Pydantic outputs.</p>
 
-<h3>2. The Python Graphing Sub-Agent (<code>graphing_agent</code>)</h3>
+<h3>2. The Visualization Planner (<code>visualization_planner_agent</code>)</h3>
 
-<p>Equipped with a secure, sandboxed <strong>Python Code Execution environment</strong> (<code>BuiltInCodeExecutor</code>), this agent dynamically writes and runs Python scripts (using libraries like <code>matplotlib</code>, <code>pandas</code>, or <code>mplfinance</code>) to plot financial data. It is capable of generating grouped bar charts for fundamentals, line charts for trend lines and moving averages, and high-fidelity candlestick charts for interday price action.</p>
+<p>Analyzes the gathered data and news context to determine if any visualizations (charts) would help explain trends, divergences, or risks. It outputs a structured <code>VisualizationPlanOutput</code> containing specifications for 0 to N charts.</p>
 
-<h3>3. The Risk Auditor Sub-Agent (<code>risk_critic_agent</code>)</h3>
+<h3>3. The Python Graphing Sub-Agent (<code>graphing_agent</code>)</h3>
 
-<p>Compliance and risk management are paramount in finance. The Risk Auditor critiques the gathered financial data, looking strictly for:
-- <strong>Downside Risks</strong>: Missed macroeconomic headwinds (e.g., inflation, rate hikes) or company-specific deceleration.
-- <strong>Over-optimism</strong>: Forward consensus and headlines that appear overly bullish relative to historical hard metrics.
-- <strong>Risk Mitigation</strong>: Practical hedging strategies (e.g., protective puts or options overlays) to protect positions.</p>
+<p>Equipped with a secure, sandboxed <strong>Python Code Execution environment</strong> (<code>BuiltInCodeExecutor</code>), this agent dynamically writes and runs Python scripts (using libraries like <code>matplotlib</code>, <code>pandas</code>, or <code>seaborn</code>) to plot financial data based on the plan. It returns a <code>GraphingOutput</code> with the generated PNG filename.</p>
 
-<h3>4. The Report Writer Sub-Agent (<code>report_agent</code>)</h3>
+<h3>4. The Risk Auditor Sub-Agent (<code>risk_critic_agent</code>)</h3>
 
-<p>The Report Writer acts as an elite institutional equity research analyst. It synthesizes raw financial tables, sentiment data, visual inferences, and the compliance audit into a comprehensive, structured Markdown document in the style of top-tier investment bank reports.</p>
+<p>Compliance and risk management are paramount in finance. The Risk Auditor critiques the gathered financial data, looking strictly for downside risks, over-optimism, and asset-class specific risks, returning a structured <code>RiskCriticOutput</code>.</p>
 
-<h3>5. The PDF Generator Sub-Agent (<code>pdf_generator_agent</code>)</h3>
+<h3>5. The Report Writer Sub-Agent (<code>report_agent</code>)</h3>
 
-<p>The final touch. This agent uses a custom Python FPDF implementation to programmatically parse the report markdown and cleanly append any generated visualization PNGs into a beautiful, downloadable PDF report.</p>
+<p>The Report Writer acts as an elite institutional equity research analyst. It synthesizes raw financial tables, sentiment data, visual inferences, and the compliance audit into a comprehensive, structured Markdown report, returning a <code>ReportOutput</code>.</p>
+
+<h3>6. The PDF Generator Sub-Agent (<code>pdf_generator_agent</code>)</h3>
+
+<p>The final touch. This agent uses a custom Python PDF generator to programmatically compile the final Markdown report and any generated visualization PNGs into a professional, downloadable PDF report, returning a <code>PDFGeneratorOutput</code>.</p>
 
 <hr />
 
@@ -244,7 +245,7 @@
 
 <h3>🛡️ Audit Before Authoring (Chain of Custody)</h3>
 
-<p>The Report Writer is physically barred from generating a report before a formal risk audit is completed. If numerical data is compiled, the Orchestrator routes execution through the <code>risk_critic_agent</code> first, ensuring that potential over-optimism and downside risks are formally integrated as a core section of the final report.</p>
+<p>The pipeline enforces a strict sequential order: the Orchestrator calls the <code>risk_critic_agent</code> to secure a compliance audit <em>before</em> it calls the <code>report_agent</code> to compile the final report. This ensures that potential over-optimism and downside risks are formally integrated as a core section of the final report and cannot be bypassed.</p>
 
 <h3>⚡ Production-Ready Deployment</h3>
 

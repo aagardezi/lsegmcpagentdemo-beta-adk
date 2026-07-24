@@ -36,50 +36,85 @@ Instead of relying on a single large language model to handle data gathering, ma
 
 ### The Specialized Agent Roles:
 
-1. **The Root Orchestrator (`lseg_market_agent`)**: The cognitive engine of the pipeline. It resolves ambiguous company names to official stock RIC (Reuters Instrument Code) symbols using a dedicated search agent, queries the LSEG tools, and orchestrates the routing of the conversation.
-2. **The Python Graphing Agent (`graphing_agent`)**: Equipped with a secure, sandboxed Python code execution environment (`BuiltInCodeExecutor`), this agent dynamically writes and runs code to plot financial data (pandas, matplotlib, mplfinance).
-3. **The Risk Auditor Agent (`risk_critic_agent`)**: Compliance and risk auditing are non-negotiable in institutional finance. This agent critiques the gathered data, checking for downside risks, macroeconomic headwinds, and over-optimism relative to historical metrics.
-4. **The Report Writer Agent (`report_agent`)**: Synthesizes the quantitative data, news sentiment, visual inferences, and risk audits into a comprehensive, publication-grade Markdown report.
-5. **The PDF Generator Agent (`pdf_generator_agent`)**: Automatically compiles the markdown report and any generated visualization PNGs into a beautiful, downloadable PDF.
+1. **The Root Orchestrator (`lseg_market_agent`)**: The cognitive engine of the pipeline. It resolves ambiguous company names to official stock RIC (Reuters Instrument Code) symbols using a dedicated search agent, queries the LSEG tools, and manages the execution flow of the sub-agents sequentially.
+2. **The Visualization Planner (`visualization_planner_agent`)**: Analyzes the gathered data and news context to determine if any visualizations (charts) would help explain trends, divergences, or risks, and outputs a structured Pydantic plan.
+3. **The Python Graphing Agent (`graphing_agent`)**: Equipped with a secure, sandboxed Python code execution environment (`BuiltInCodeExecutor`), this agent dynamically generates financial plots based on the plan from the visualization planner, returning a confirmation.
+4. **The Risk Auditor Agent (`risk_critic_agent`)**: Compliance and risk auditing are non-negotiable in institutional finance. This agent critiques the gathered data, checking for downside risks, macroeconomic headwinds, and over-optimism relative to historical metrics, returning a structured audit.
+5. **The Report Writer Agent (`report_agent`)**: Synthesizes the quantitative data, news sentiment, visual inferences, and risk audits into a comprehensive, publication-grade Markdown report.
+6. **The PDF Generator Agent (`pdf_generator_agent`)**: Automatically compiles the markdown report and any generated visualization PNGs into a beautiful, downloadable PDF.## Deep Dive: Agent Design & Orchestration Code
 
----
+For technical practitioners and agentic coders, the core value of the Google ADK lies in its ability to declare agents with clean boundaries, structured schemas, and distinct tool capabilities. Let's look at how the Cross-Asset Market Intelligence & Valuation Agent is structured under the hood in `agent.py`.
 
-## Deep Dive: Agent Design & Orchestration Code
+### 1. Defining Structured Pydantic Schemas for Multi-Agent Task Mode
 
-For technical practitioners and agentic coders, the core value of the Google ADK lies in its ability to declare agents with clean boundaries, specialized instructions, and distinct tool capabilities. Let's look at how the Cross-Asset Market Intelligence & Valuation Agent is structured under the hood in `agent.py`.
-
-### 1. Declaring the Specialized Graphing Agent with Skills
-
-The Graphing Agent is equipped with a sandboxed Python execution context using ADK's `BuiltInCodeExecutor`. To improve its decision-making, it has been enhanced with a dynamic **Skill** for visual planning.
+To ensure rigorous communication and prevent unstructured text parsing errors, all sub-agents operate in **Task Mode** and return structured Pydantic schemas. Here are the key schemas defined in `agent.py`:
 
 ```python
-from google.adk.agents import LlmAgent
-from google.adk.code_executors import BuiltInCodeExecutor
-from google.adk.models import google_llm
-from google.adk.skills import load_skill_from_dir
-from google.adk.tools import skill_toolset
-import pathlib
+from pydantic import BaseModel, Field
 
-# Initialize the Gemini model for quantitative/graphing logic
-model31 = google_llm.Gemini(model=config.gemini31_model)
+class EventAnnotation(BaseModel):
+    date: str = Field(description="Date of the event in YYYY-MM-DD format (for time-series) or x-axis value.")
+    label: str = Field(description="Brief label/description of the event.")
 
-# Load the visualization planning skill (following agentskills.io format)
-visualization_skill = load_skill_from_dir(
-    pathlib.Path(__file__).parent / "skills" / "visualization-planning"
-)
+class ChartSpec(BaseModel):
+    chart_type: str = Field(description="Type of chart to generate (e.g., 'line', 'bar', 'football_field', 'heatmap', 'yield_curve', 'fx_forward_curve', 'volatility_smile').")
+    title: str = Field(description="Title of the chart.")
+    data_description: str = Field(description="Detailed description of the data to be plotted, including keys and values from the context.")
+    x_label: str = Field(description="Label for the x-axis.")
+    y_label: str = Field(description="Label for the y-axis.")
+    annotations: list[EventAnnotation] = Field(default=[], description="List of events to annotate on the chart.")
+    styling_instructions: str = Field(default="", description="Specific styling instructions, e.g., color preferences, log scale, etc.")
 
-# Register the skill inside a SkillToolset
-my_skill_toolset = skill_toolset.SkillToolset(
-    skills=[visualization_skill],
-)
+class VisualizationPlanOutput(BaseModel):
+    plan_explanation: str = Field(description="Explanation of why these charts are planned or why no charts are needed.")
+    charts: list[ChartSpec] = Field(default=[], description="List of planned charts. Can be empty if no visualization is appropriate.")
 
-GRAPHING_AGENT_INSTRUCTIONS = """You are a Data Visualization and Graphing Agent.
-You are equipped with a Python code execution environment.
-When you receive instructions along with numerical data, write a Python script (using libraries like matplotlib, pandas, or mplfinance) to plot the data.
+class GraphingOutput(BaseModel):
+    artifact_name: str = Field(description="Filename of the generated graph PNG file saved as artifact.")
+    confirmation: str = Field(description="Confirming message explaining the plotted parameters.")
+```
+
+### 2. Declaring the Visualization Planner Agent
+
+The `visualization_planner_agent` is responsible for analyzing the gathered data and deciding what charts to generate. It uses the `VisualizationPlanOutput` schema to return its plan.
+
+```python
+VISUALIZATION_PLANNER_INSTRUCTIONS = """You are a Financial Visualization Planner.
+Your task is to analyze the gathered market data and news context, and determine if any visualizations (charts) would help explain the trends, divergences, or risks.
+You should plan 0 to N charts.
 ...
 ROUTING INSTRUCTION:
-1. First, write and execute your Python code to draw the graph.
-2. Once the code execution completes and the graph is generated, in your very next response, you MUST call the `transfer_to_agent` tool to transfer execution to `risk_critic_agent`.
+Once you have completed your plan, you MUST call the `finish_task` tool providing the structured `VisualizationPlanOutput`.
+"""
+
+visualization_planner_agent = LlmAgent(
+    name="visualization_planner_agent",
+    description="Plans visualizations based on gathered data and news context.",
+    model=model,
+    instruction=VISUALIZATION_PLANNER_INSTRUCTIONS,
+    mode="task",
+    output_schema=VisualizationPlanOutput,
+)
+```
+
+### 3. Declaring the Graphing Agent with Matplotlib Recipes
+
+The `graphing_agent` is equipped with a secure, sandboxed Python code execution environment (`BuiltInCodeExecutor`). Instead of relying on external skill files, the plotting heuristics and LSEG brand styling guides are defined directly in the agent's system instructions as inline recipes.
+
+```python
+GRAPHING_AGENT_INSTRUCTIONS = """You are a Data Visualization and Graphing Agent.
+You are equipped with a Python code execution environment.
+When you receive a ChartSpec and numerical data, write a Python script (using libraries like matplotlib, pandas, numpy, or seaborn) to plot the data.
+You must strictly follow the LSEG Branding Visual Styles and use the provided code recipes for advanced financial charts.
+
+### LSEG Branding Visual Styles:
+1. **Background**: Always use a clean white background.
+2. **Color Palette**: Primary (`#004B87`), Secondary (`#008080`), Accent (`#708090`)...
+...
+### Matplotlib Recipes & Templates:
+# [Recipes for Football Field, Heatmap, Yield Curve, Volatility Smile, and Time-Series with Annotations are included inline]
+...
+Once the code execution completes and the graph is generated, call the `finish_task` tool providing the `artifact_name` and `confirmation`.
 """
 
 graphing_agent = LlmAgent(
@@ -87,92 +122,46 @@ graphing_agent = LlmAgent(
     description="Draws financial graphs, plots, and visualizes data using python.",
     model=model31,
     instruction=GRAPHING_AGENT_INSTRUCTIONS,
-    tools=[
-        my_skill_toolset,
-    ],
-    code_executor=BuiltInCodeExecutor()
+    tools=[],
+    code_executor=BuiltInCodeExecutor(),
+    mode="task",
+    output_schema=GraphingOutput,
 )
 ```
 
-By supplying `code_executor=BuiltInCodeExecutor()`, the ADK automatically registers a code interpreter capability for the agent. The agent writes standard Python blocks, executes them locally in a secure sandbox, inspects standard output, and preserves generated image outputs.
+### 4. Structuring the Root Orchestrator for Sequential Execution
 
-### Enhancing Agents with Skills (`agentskills.io` Patterns)
-
-A major challenge in building reliable financial agents is teaching them domain-specific heuristics—such as mapping analytical intent to the appropriate chart type—without cluttering the core system instructions. System prompts have a limited context window, and overloading them with layout guidelines or plotting rules reduces overall reasoning capability.
-
-The Google ADK solves this by implementing the **Agent Skills pattern** (standardized at [agentskills.io](https://agentskills.io/)). A "Skill" is a structured markdown document (with a YAML frontmatter header) that provides specialized guidance for a specific task. During execution, the ADK dynamic runtime loads the skill file and registers it inside a `SkillToolset`. The LLM can then refer to the skill dynamically as a tool when it needs guidance on how to perform its specialized task.
-
-Let's look at the skill file structure under `skills/visualization-planning/skill.md`:
-
-```markdown
----
-name: visualization-planning
-description: Visualization planning guidance for matching analytical intent to chart types.
-version: 1.0.0
-agent_name: graphing_agent
----
-
-# Visualization Planning Guidance
-
-Choose the chart type that best clarifies the analytical intent and minimizes cognitive load:
-| Analytical Intent       | Suggested Chart Type    | Key Features             |
-| ----------------------- | ----------------------- | ------------------------ |
-| Trend inflection        | Candlestick with volume | Annotate support/res     |
-| Price vs. fundamentals  | Multi-line with events  | Overlay news on price    |
-| Option positioning      | 2D/3D Greeks surfaces   | Delta/gamma strikes      |
-...
-```
-
-By mounting `my_skill_toolset` containing this skill to the `graphing_agent`, the agent no longer has to guess how to visualize Microsoft's volatility surface or a corporate bond's yield curve. It consults the skill to determine the best visual layout (e.g. 3D surface plot or candlestick overlay) and then writes correct, optimized Python code inside the sandbox.
-
-
-### 2. Structuring the Root Orchestrator and Agent Delegation
-
-The Root Orchestrator binds the entire multi-agent network together. It directly holds the LSEG MCP toolset, can resolve corporate names using a nested RIC resolver, and lists all other specialized agents as its `sub_agents`.
+The Root Orchestrator (`lseg_market_agent`) binds the entire multi-agent network. It directly holds the LSEG MCP toolset and lists all other specialized agents as its `sub_agents`. Its instructions dictate a strict sequential execution flow.
 
 ```python
-from google.adk.tools import AgentTool
-
-# Define the root orchestrator's system instructions
 AGENT_INSTRUCTIONS = """You are a highly capable Cross-Asset Market Intelligence & Valuation Agent for LSEG.
-Your objective is to provide a comprehensive, multi-modal analysis of companies, macroeconomic conditions, fixed income, FX, and indices by synthesizing data from the LSEG MCP server (which offers a complete suite of 37 tools).
-
-When the user asks you to analyze a company or market condition, you should act as an Orchestrator:
-1. Proactively gather information from AT LEAST THREE tools relevant to the domain (e.g. Fundamentals, Forward Estimates, and News Headlines for Equities; yield curves, risk analytics, and credit curves for Fixed Income).
-2. For news, summarize the exact facts mentioned in the headlines - do not hallucinate outside info.
-3. Always cite the specific metrics and news stories retrieved. 
-4. **Proactive Visualization**: Even if the user DOES NOT explicitly ask for a graph, you should analyze the gathered data. If a visualization would make the final answer or report more appealing, you MUST delegate the rendering to your `graphing_agent` subagent.
-5. If the user requests a comprehensive report and no graphs are needed or they are already complete, you MUST transfer the gathered context directly to `risk_critic_agent` first to secure a risk compliance audit.
+...
+When the user asks you to analyze a company or market condition, you should act as an Orchestrator and manage the entire pipeline sequentially:
+1. Proactively gather information from AT LEAST THREE tools relevant to the domain...
+2. For news, summarize the exact facts...
+3. Always cite the specific metrics...
+4. **Visualization Planning**: Call the `visualization_planner_agent` (via `request_task_visualization_planner_agent`) with the gathered data and news context to get a visualization plan.
+5. **Chart Generation**: If the planner returns charts in its plan, loop over each planned chart and call the `graphing_agent` (via `request_task_graphing_agent`) to generate the PNG image.
+6. **Risk Audit**: Call `risk_critic_agent` (via `request_task_risk_critic_agent`)...
+7. **Report Compilation**: Call `report_agent` (via `request_task_report_agent`)...
+8. **PDF Generation**: Call `pdf_generator_agent` (via `request_task_pdf_generator_agent`)...
+9. **Final Output**: Output the complete Markdown report and state the final PDF path.
 """
 
-# The Root Orchestrator coordinates the workflow and sub-agents
 root_agent = LlmAgent(
     name="lseg_market_agent",
-    model=model,
+    model=model31,
     instruction=AGENT_INSTRUCTIONS,
-    tools=[
-        mcp_client_bridge.create_lseg_mcp_toolset(), 
-        AgentTool(ric_resolver_agent)
-    ],
-    sub_agents=[
-        graphing_agent, 
-        risk_critic_agent, 
-        report_agent, 
-        pdf_generator_agent
-    ]
+    tools=[mcp_client_bridge.create_lseg_mcp_toolset(), AgentTool(ric_resolver_agent)],
+    sub_agents=[visualization_planner_agent, graphing_agent, risk_critic_agent, report_agent, pdf_generator_agent]
 )
 ```
 
-### 3. Orchestration and Chain of Custody Routing
+### 5. Sequential Orchestration vs. Handoffs
 
-How does the orchestrator route the execution flow? Instead of writing hardcoded Python logic for agent state transitions, the ADK enables the orchestrator and sub-agents to use **system instructions** and dynamic tool-calling (via the `transfer_to_agent` tool) to manage execution handoffs. 
+In ADK 2.0 Task Mode, orchestration is centralized. Instead of agents using `transfer_to_agent` to pass control to the next sub-agent (which risks losing context or breaking the chain of custody), the Root Orchestrator retains control. 
 
-For example, the Root Orchestrator's system instruction dictates:
-* Gather LSEG data first.
-* If visualizable trends exist, delegate to `graphing_agent`.
-* Otherwise, hand over to `risk_critic_agent` to audit downside risks.
-
-Once the `graphing_agent` runs its Python plot script, it invokes `transfer_to_agent("risk_critic_agent")` automatically. The risk auditor completes its critique, and then transfers to `report_agent`, which in turn passes the markdown context to `pdf_generator_agent` to compile the final PDF. This creates a fully audited, linear chain of custody ensuring that every report contains proper downside audits and required visualizations.
+When the Orchestrator calls a sub-agent (e.g., `request_task_risk_critic_agent`), the sub-agent executes its instruction and *must* call `finish_task` to return its structured output to the Orchestrator. The Orchestrator then inspects the result and makes the next sequential call. This guarantees a deterministic, auditable execution path.ualizations.
 
 ---
 
@@ -276,23 +265,17 @@ The ADK UI visualizes the topology of our multi-agent team. In the graph view, w
 
 ![The multi-agent network topology visualized inside the ADK UI](images/2.png)
 
-### Step 3: Handoff to the Graphing Sub-Agent
-Because the orchestrator has retrieved multi-period financial fundamentals, consensus estimates, and price histories, its system instructions trigger a proactive visualization. The orchestrator calls the `transfer_to_agent` tool to hand off the execution state to the **Python Graphing Agent**:
-
-![Dynamic context handoff from the Root Orchestrator to the Graphing Agent](images/3.png)
+### Step 3: Visualization Planning
+Because the orchestrator has retrieved multi-period financial fundamentals, consensus estimates, and price histories, its system instructions trigger the visualization planning phase. The orchestrator calls the `visualization_planner_agent` to determine if charts are needed. The planner returns a structured `VisualizationPlanOutput` containing specifications for the required charts.
 
 ### Step 4: Proactive Visualization in the Python Sandbox
-The `graphing_agent` receives the dataset, consults its visualization planning skill, writes a Python script, and runs it within its secure, sandboxed execution environment. The output—a high-fidelity dashboard containing three subplots showing historical prices, historical fundamentals, and analyst consensus forecasts—is rendered directly in the playground chat window:
-
-![The custom dashboard plotted dynamically in the sandboxed execution environment](images/4.png)
+If the plan contains charts, the orchestrator loops through them and calls the `graphing_agent`. The graphing agent receives the ChartSpec and data, writes a Python script using its inline recipes, and runs it within its secure, sandboxed execution environment. It returns a `GraphingOutput` with the generated PNG filename (e.g., `vodafone_dashboard.png`), which is saved as an artifact.
 
 ### Step 5: Auditing and Generating the Research Report
-Following the visual plotting, the execution flow is routed through the **Risk Auditor (`risk_critic_agent`)** to compile compliance overlays. The context is then handed off to the **Report Writer (`report_agent`)**, which synthesizes all quantitative details, news sentiment, and compliance notes into a comprehensive, multi-section Markdown document:
-
-![The Report Writer agent outputting the structured investment thesis](images/5.png)
+The orchestrator then calls the `risk_critic_agent` to perform a compliance audit on the gathered data and planned visualizations, receiving a structured `RiskCriticOutput`. Once the audit is complete, the orchestrator calls the `report_agent` to synthesize the quantitative data, news sentiment, visual inferences, and compliance notes into a comprehensive Markdown report.
 
 ### Step 6: Compilation into the Final PDF Report
-Lastly, the **PDF Generator (`pdf_generator_agent`)** receives the markdown text along with the file path of the generated dashboard image. It runs a custom fpdf compilation script to generate a beautifully styled PDF:
+Lastly, the orchestrator calls the `pdf_generator_agent`, passing the Markdown report and the list of generated chart PNG paths. The agent runs the PDF generation tool to compile a styled PDF:
 
 ![The first page of the generated PDF showing formatting and structure](images/6.png)
 
