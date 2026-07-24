@@ -238,7 +238,6 @@ deployment_metadata.json
 *.mp4
 *.pdf
 *.html
-images/
 helpercode/recordings/
 
 
