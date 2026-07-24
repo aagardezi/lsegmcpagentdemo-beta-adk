@@ -108,10 +108,17 @@ async def create_pdf_report(
                             # Try to find the latest generated media graph in the session
                             print(f"[PDF Generator] Exact artifact {img_path} not found. Searching session artifacts...")
                             all_artifacts = await tool_context.list_artifacts()
-                            media_pngs = sorted([
-                                a for a in all_artifacts 
-                                if a.startswith("media__") and a.endswith(".png")
-                            ])
+                            import re
+                            pattern = re.compile(r"^(media__.*\.png|\d{8}_\d{6}\.png)$")
+                            matching_artifacts = [a for a in all_artifacts if pattern.match(a)]
+
+                            def get_sort_key(filename):
+                                ts_match = re.search(r"(\d{8}_\d{6})", filename)
+                                if ts_match:
+                                    return (1, ts_match.group(1), filename)
+                                return (0, "", filename)
+
+                            media_pngs = sorted(matching_artifacts, key=get_sort_key)
                             if media_pngs:
                                 latest_media = media_pngs[-1]
                                 print(f"[PDF Generator] Resolved {img_path} -> latest session graph: {latest_media}")
